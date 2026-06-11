@@ -1,0 +1,101 @@
+﻿<Window x:Class="ElKharis.Views.DashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="El-Kharis - Tableau de Bord" Height="650" Width="1050"
+        WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="NoResize"
+        Background="#F4F6FA">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#1A365D">
+            <Grid Margin="0,20,0,20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,40">
+                    <TextBlock Text="✨ EL-KHARIS" FontSize="22" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Pressing Management" FontSize="11" Foreground="#90CDF4" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1"  Margin="10,0,10,0">
+                    <Button Content="📊   Tableau de bord" Background="#2B6CB0" Foreground="White" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <Button Content="👥   Gestion des Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnClients_Click"/>
+
+                    <Button Content="🧺   Gestion des Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnCommandes_Click"/>
+                </StackPanel>
+
+                <Button Grid.Row="2" Content="🚪   Déconnexion" Background="Transparent" Foreground="#FEB2B2" FontSize="14" Height="45" Margin="10,0,10,0" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnLogout_Click"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="30,20,30,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,25">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Tableau de bord" FontSize="26" FontWeight="Bold" Foreground="#2D3748"/>
+                    <TextBlock Text="Vue d'ensemble de l'activité du pressing" FontSize="13" Foreground="#718096"/>
+                </StackPanel>
+
+                <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#A0AEC0" FontWeight="Bold" FontSize="18" Cursor="Hand" Click="BtnQuitter_Click"/>
+            </Grid>
+
+            <UniformGrid Grid.Row="1" Columns="3" Rows="1" Height="100" Margin="0,0,0,30">
+                <Border Background="White" CornerRadius="10" Margin="0,0,10,0" Padding="20,15,20,15">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Total Commandes" FontSize="12" Foreground="#A0AEC0" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtTotalCommandes" Text="124" FontSize="24" FontWeight="Bold" Foreground="#2D3748" Margin="0,5,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="📊" FontSize="26" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#4299E1"/>
+                    </Grid>
+                </Border>
+
+                <Border Background="White" CornerRadius="10" Margin="5,0,5,0" Padding="20,15,20,15">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="En cours de traitement" FontSize="12" Foreground="#A0AEC0" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtEnCours" Text="18" FontSize="24" FontWeight="Bold" Foreground="#DD6B20" Margin="0,5,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="⏳" FontSize="26" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#ED8936"/>
+                    </Grid>
+                </Border>
+
+                <Border Background="White" CornerRadius="10" Margin="10,0,0,0" Padding="20,15,20,15">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Livrées / Terminées" FontSize="12" Foreground="#A0AEC0" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtLivrees" Text="106" FontSize="24" FontWeight="Bold" Foreground="#38A169" Margin="0,5,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="✅" FontSize="26" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#48BB78"/>
+                    </Grid>
+                </Border>
+            </UniformGrid>
+
+            <Border Grid.Row="2" Background="White" CornerRadius="10" Padding="30">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="👋 Bienvenue dans l'interface El-Kharis" FontSize="20" FontWeight="Bold" Foreground="#2D3748" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock Text="Utilisez le menu de gauche pour enregistrer un nouveau client ou gérer les dépôts de vêtements." FontSize="14" Foreground="#718096" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
