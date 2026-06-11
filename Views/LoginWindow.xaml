@@ -23,7 +23,7 @@
 
                 <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                     <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="✨" FontSize="48" HorizontalAlignment="Center"/>
+                        <Image Source="/Resources/logo.png" Height="80" Width="80" HorizontalAlignment="Center" Margin="0,0,0,15" Stretch="Uniform"/>
                         <TextBlock Text="EL-KHARIS" FontSize="28" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,5"/>
                         <TextBlock Text="Gestion de Pressing" FontSize="14" Foreground="#E2E8F0" HorizontalAlignment="Center"/>
                         <Border Width="50" Height="3" Background="#4FD1C5" Margin="0,20,0,0" HorizontalAlignment="Center"/>

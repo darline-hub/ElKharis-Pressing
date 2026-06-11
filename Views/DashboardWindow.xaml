@@ -20,10 +20,15 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,40">
-                    <TextBlock Text="✨ EL-KHARIS" FontSize="22" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Pressing Management" FontSize="11" Foreground="#90CDF4" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <Image Source="/Resources/logo.png" Height="80" Width="80" HorizontalAlignment="Center" Margin="0,0,0,15" Stretch="Uniform"/>
+                    <TextBlock Text="EL-KHARIS" FontSize="22" FontWeight="Bold" Foreground="White"/>
                 </StackPanel>
-
+                <Border Background="#2B6CB0" CornerRadius="8" Padding="10" Margin="0,5,0,25">
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock x:Name="TxtUserNom" Text="Nom de l'utilisateur" Foreground="White" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="TxtUserRole" Text="Rôle" Foreground="#CBD5E0" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                    </StackPanel>
+                </Border>
                 <StackPanel Grid.Row="1"  Margin="10,0,10,0">
                     <Button Content="📊   Tableau de bord" Background="#2B6CB0" Foreground="White" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand">
                         <Button.Resources>
@@ -33,12 +38,19 @@
                         </Button.Resources>
                     </Button>
 
-                    <Button Content="👥   Gestion des Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnClients_Click"/>
+                    <Button Content="🧺 Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnCommandes_Click"/>
 
-                    <Button Content="🧺   Gestion des Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnCommandes_Click"/>
+                    <Button Content="👥 Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnClients_Click"/>
+                    <Button Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
+                    <Button Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
                 </StackPanel>
-
-                <Button Grid.Row="2" Content="🚪   Déconnexion" Background="Transparent" Foreground="#FEB2B2" FontSize="14" Height="45" Margin="10,0,10,0" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnLogout_Click"/>
+                <Button Grid.Row="2" Content="Déconnexion" Background="#E53E3E" Foreground="White" FontWeight="Bold" FontSize="14" Height="40" Margin="15,0,15,0" Cursor="Hand" BorderThickness="0" Click="BtnLogout_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
             </Grid>
         </Border>
 
@@ -56,6 +68,18 @@
                 </StackPanel>
 
                 <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#A0AEC0" FontWeight="Bold" FontSize="18" Cursor="Hand" Click="BtnQuitter_Click"/>
+
+                <Border HorizontalAlignment="Right" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="15,10,15,10" Width="240">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Ellipse Width="35" Height="35" Fill="#E2E8F0" HorizontalAlignment="Left"/>
+                            <StackPanel Margin="45,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Guy Bertrand Tchoffo" FontSize="13" FontWeight="Bold" Foreground="#2D3748"/>
+                                <TextBlock Text="Administrateur" FontSize="11" Foreground="#A0AEC0"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <UniformGrid Grid.Row="1" Columns="3" Rows="1" Height="100" Margin="0,0,0,30">

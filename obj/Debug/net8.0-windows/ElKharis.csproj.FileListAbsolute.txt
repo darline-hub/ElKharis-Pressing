@@ -17,11 +17,15 @@ C:\Users\NT Store\source\repos\ElKharis\bin\Debug\net8.0-windows\runtimes\win-x6
 C:\Users\NT Store\source\repos\ElKharis\bin\Debug\net8.0-windows\runtimes\win-x64\native\krb5_64.dll
 C:\Users\NT Store\source\repos\ElKharis\bin\Debug\net8.0-windows\runtimes\win-x64\native\krbcc64.dll
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\ElKharis.csproj.AssemblyReference.cache
+C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\CommandesWindow.baml
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\DashboardWindow.baml
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\LoginWindow.baml
+C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\NouvelleCommandeWindow.baml
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\MainWindow.g.cs
+C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\CommandesWindow.g.cs
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\DashboardWindow.g.cs
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\LoginWindow.g.cs
+C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\Views\NouvelleCommandeWindow.g.cs
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\App.g.cs
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\ElKharis_MarkupCompile.cache
 C:\Users\NT Store\source\repos\ElKharis\obj\Debug\net8.0-windows\ElKharis_MarkupCompile.lref
