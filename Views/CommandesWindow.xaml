@@ -11,14 +11,6 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Grid Background="#1A365D">
-            <StackPanel Margin="10,20,10,10">
-               
-            </StackPanel>
-
-            <Button Content="Déconnexion" VerticalAlignment="Bottom" Margin="10,0,10,20" Background="Transparent" Foreground="#E53E3E" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand"/>
-        </Grid>
-
         <Border Grid.Column="0" Background="#1A365D" BorderThickness="0,0,1,0" BorderBrush="#E2E8F0">
             <Grid Margin="10,20,10,10">
                 <Grid.RowDefinitions>
@@ -28,9 +20,9 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="1" Margin="0,0,10,0">
-                    <Image Source="/Resources/logo.png" Height="80" Width="80" HorizontalAlignment="Center" Margin="0,0,0,15" Stretch="Uniform"/>
+                    <Image Source="/Resources/logo.png" Height="80" Width="80" HorizontalAlignment="Center" Margin="0,0,0,-5" Stretch="Uniform"/>
                     <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                    <Border Background="#2B6CB0" CornerRadius="8" Padding="10" Margin="0,5,0,25">
+                    <Border Background="#2B6CB0" CornerRadius="8" Padding="1" Margin="0,5,0,10">
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock x:Name="TxtUserNom" Text="Nom de l'utilisateur" Foreground="White" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                             <TextBlock x:Name="TxtUserRole" Text="Rôle" Foreground="#CBD5E0" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" Margin="0,3,0,0"/>
@@ -65,8 +57,8 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,10">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Grid Grid.Row="0"  Margin="0,0,0,10">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Button Content="☰" FontSize="20" Background="#00A3C4" Foreground="White" Width="40" Height="40" BorderThickness="0" Cursor="Hand" Margin="0,0,15,0">
                         <Button.Resources>
                             <Style TargetType="Border">
@@ -74,12 +66,17 @@
                             </Style>
                         </Button.Resources>
                     </Button>
-                    <Border BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="8" Background="White" Padding="10,5,10,5" Width="320">
+                    <Border BorderThickness="1" BorderBrush="#CBD5E0" CornerRadius="8" Background="White" Padding="10,5,10,5" Width="320" Height="28">
                         <Grid>
-                            <TextBox x:Name="TxtRecherche" BorderThickness="0" Background="Transparent" FontSize="14" Foreground="#2D3748" VerticalContentAlignment="Center" TextChanged="TxtRecherche_TextChanged"/>
-                            <TextBlock Text="Rechercher une commande, client..." Foreground="#A0AEC0" IsHitTestVisible="False" VerticalAlignment="Center" Margin="5,0,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="217*"/>
+                                <ColumnDefinition Width="0*"/>
+                                <ColumnDefinition Width="81*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtRecherche" BorderThickness="0" Background="Transparent" FontSize="14" Foreground="#2D3748" VerticalContentAlignment="Center" Margin="5,-2,-4,0" TextChanged="TxtRecherche_TextChanged" Height="28" VerticalAlignment="Center" Grid.ColumnSpan="3"/>
+                            <TextBlock Text="Rechercher une commande, client..." Foreground="#A0AEC0" IsHitTestVisible="False" VerticalAlignment="Center" Margin="20,0,0,0" Grid.ColumnSpan="3" Height="20">
                                 <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
+                                    <Style TargetType="{x:Type TextBlock}">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Text, ElementName=TxtRecherche}" Value="">
@@ -94,24 +91,16 @@
                 </StackPanel>
                 <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#A0AEC0" FontWeight="Bold" FontSize="18" Cursor="Hand" Click="BtnQuitter_Click"/>
 
-                <Border HorizontalAlignment="Right" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="15,10,15,10" Width="240">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,8">
-                            <Ellipse Width="35" Height="35" Fill="#E2E8F0" HorizontalAlignment="Left"/>
-                            <StackPanel Margin="45,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="Guy Bertrand Tchoffo" FontSize="13" FontWeight="Bold" Foreground="#2D3748"/>
-                                <TextBlock Text="Administrateur" FontSize="11" Foreground="#A0AEC0"/>
-                            </StackPanel>
-                        </Grid>
-                        <Button Content="+ Nouvelle commande" Background="#00A3C4" Foreground="White" FontWeight="Bold" FontSize="13" Height="32" Cursor="Hand" BorderThickness="0" Click="BtnNouvelleCommande_Click">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="6"/>
-                                </Style>
-                            </Button.Resources>
-                        </Button>
-                    </StackPanel>
-                </Border>
+                <StackPanel Margin="0,0,0,10">
+
+                    <Button Content="+ Nouvelle commande" Background="#00A3C4" HorizontalAlignment="Right" Foreground="White" FontWeight="Bold" FontSize="13" Height="32" Cursor="Hand" BorderThickness="0" Padding="15,8,12,8"  Click="BtnNouvelleCommande_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
             </Grid>
 
             <StackPanel Grid.Row="1" Margin="0,0,0,15">
@@ -146,13 +135,6 @@
                 </Border>
             </UniformGrid>
 
-            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="5,0,0,10">
-                <TextBlock Text="Toutes(120)" Foreground="#00A3C4" FontWeight="Bold" FontSize="13" Margin="0,0,20,0" Cursor="Hand"/>
-                <TextBlock Text="En attente(17)" Foreground="#2D3748" FontWeight="SemiBold" FontSize="13" Margin="0,0,20,0" Cursor="Hand"/>
-                <TextBlock Text="En traitement(28)" Foreground="#2D3748" FontWeight="SemiBold" FontSize="13" Margin="0,0,20,0" Cursor="Hand"/>
-                <TextBlock Text="Prêtes(50)" Foreground="#2D3748" FontWeight="SemiBold" FontSize="13" Margin="0,0,20,0" Cursor="Hand"/>
-            </StackPanel>
-
             <Border Grid.Row="4" Background="White" CornerRadius="4" BorderThickness="1" BorderBrush="#A0AEC0" Padding="5">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -165,9 +147,67 @@
                             <DataGridCheckBoxColumn Width="40"/>
                             <DataGridTextColumn Header="N° Commande" Binding="{Binding numero_commande}" Width="160" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Clients" Binding="{Binding nom_client}" Width="160"/>
-                            <DataGridTextColumn Header="Statut" Binding="{Binding statut_commande}" Width="130"/>
                             <DataGridTextColumn Header="Date" Binding="{Binding date_commande, StringFormat=\{0:dd/MM/yyyy\}}" Width="110"/>
-                            <DataGridTextColumn Header="Total" Binding="{Binding montant_total, StringFormat=\{0:N0\} FCFA}" Width="*"/>
+                            <DataGridTextColumn Header="Total" Binding="{Binding montant_total, StringFormat=\{0:N0\} FCFA}" Width="110"/>
+                            <DataGridTemplateColumn Header="Statut" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="8,4,8,4" CornerRadius="4" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#EDF2F7"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding statut_commande}" Value="En attente">
+                                                            <Setter Property="Background" Value="#FEEBC8"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding statut_commande}" Value="En cours de traitement">
+                                                            <Setter Property="Background" Value="#EBF8FF"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding statut_commande}" Value="En traitement">
+                                                            <Setter Property="Background" Value="#EBF8FF"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding statut_commande}" Value="Prête">
+                                                            <Setter Property="Background" Value="#C6F6D5"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <TextBlock Text="{Binding statut_commande}" FontSize="12" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#4A5568"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding statut_commande}" Value="En attente">
+                                                                <Setter Property="Foreground" Value="#C05621"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding statut_commande}" Value="En cours de traitement">
+                                                                <Setter Property="Foreground" Value="#2B6CB0"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding statut_commande}" Value="En traitement">
+                                                                <Setter Property="Foreground" Value="#2B6CB0"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding statut_commande}" Value="Prête">
+                                                                <Setter Property="Foreground" Value="#22543D"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Actions" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Content="📝" ToolTip="Modifier la commande" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="14" Margin="0,0,10,0" Click="BtnModifierCommande_Click" Tag="{Binding id_commande}"/>
+                                            <Button Content="🗑️" ToolTip="Supprimer la commande" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="14" Click="BtnSupprimerCommande_Click" Tag="{Binding id_commande}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 
