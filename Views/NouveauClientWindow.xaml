@@ -1,0 +1,62 @@
+﻿<Window x:Class="ElKharis.Views.NouveauClientWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ElKharis.Views"
+        mc:Ignorable="d"
+        Title="NouveauClientWindow" Height="450" Width="800">
+    <Grid>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="LblTitre" Grid.Row="0" Text="Nouveau Client" FontSize="20" FontWeight="Bold" Foreground="#0A2540" Margin="0,0,0,15"/>
+
+            <StackPanel Grid.Row="1">
+                <TextBox x:Name="TxtIdClient" Visibility="Collapsed"/>
+
+                <TextBlock Text="Nom " FontWeight="SemiBold" Margin="0,5,0,2"/>
+                <TextBox x:Name="TxtNom" Height="30" VerticalContentAlignment="Center"/>
+
+                <TextBlock Text="Prénom" FontWeight="SemiBold" Margin="0,10,0,2"/>
+                <TextBox x:Name="TxtPrenom" Height="30" VerticalContentAlignment="Center"/>
+
+                <TextBlock Text="Sexe " FontWeight="SemiBold" Margin="0,10,0,2"/>
+                <ComboBox x:Name="CbSexe" Height="30" VerticalContentAlignment="Center">
+                    <ComboBoxItem Content="M"/>
+                    <ComboBoxItem Content="F"/>
+                </ComboBox>
+
+                <TextBlock Text="Téléphone " FontWeight="SemiBold" Margin="0,10,0,2"/>
+                <TextBox x:Name="TxtTelephone" Height="30" VerticalContentAlignment="Center"/>
+
+                <TextBlock Text="Email" FontWeight="SemiBold" Margin="0,10,0,2"/>
+                <TextBox x:Name="TxtEmail" Height="30" VerticalContentAlignment="Center"/>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                        <TextBlock Text="Ville" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                        <TextBox x:Name="TxtVille" Height="30" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                        <TextBlock Text="Quartier" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                        <TextBox x:Name="TxtQuartier" Height="30" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+
+            <UniformGrid Grid.Row="2" Columns="2" Rows="1" Height="40" Margin="0,15,0,0">
+                <Button x:Name="BtnAnnuler" Content="Annuler" Background="#E0E0E0" Margin="0,0,5,0" BorderThickness="0" Click="BtnAnnuler_Click"/>
+                <Button x:Name="BtnEnregistrer" Content="Enregistrer" Background="#00A8CC" Foreground="White" FontWeight="Bold" Margin="5,0,0,0" BorderThickness="0" Click="BtnEnregistrer_Click"/>
+            </UniformGrid>
+        </Grid>
+    </Grid>
+</Window>

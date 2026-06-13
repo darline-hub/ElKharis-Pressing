@@ -1,275 +1,227 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using ElKharis.Database;
 using MySql.Data.MySqlClient;
+using ElKharis.Models;
 
 namespace ElKharis.Views
 {
-    /// <summary>
-    /// Logique d'interaction pour CommandesWindow.xaml
-    /// </summary>
-        public partial class CommandesWindow : Window
-        {
-            private DataTable tableCommandes = new DataTable();
+    public partial class CommandesWindow : Window
+    {
+        private readonly string connectionString = "Server=localhost;Database=pressing_elkharis;Uid=root;Pwd=;";
+        private DataTable dtCommandes = new DataTable();
 
         public CommandesWindow()
         {
-
-            tableCommandes = new DataTable();
             InitializeComponent();
-            ChargerDonnees();
-            ActualiserTout();
             TxtUserNom.Text = Session.NomUtilisateur;
             TxtUserRole.Text = Session.Role;
+            ChargerCommandes();
         }
 
-        public void ChargerDonnees()
+        private void ChargerCommandes()
+        {
+            try
             {
-                using (MySqlConnection conn = DbConnection.GetConnection())
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
                 {
-                    if (conn == null) return;
+                    conn.Open();
 
-                    string query = @"SELECT c.id_commande, c.numero_commande, c.date_commande, 
-                                        c.montant_total, c.statut_commande, cl.nom
-                                 FROM commandes c
-                                 LEFT JOIN clients cl ON c.id_client = cl.id_client
-                                 ORDER BY c.id_commande DESC";
+                    // Sélection des colonnes qui correspondent exactement à tes Bindings XAML
+                    string query = @"SELECT id_commande, numero_commande, nom_client, date_commande, montant_total, statut_commande 
+                                     FROM commandes 
+                                     ORDER BY date_commande DESC";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        using (MySqlDataAdapter adapter = new MySqlDataAdapter(cmd))
+                        using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
                         {
-                            tableCommandes = new DataTable();
-                            adapter.Fill(tableCommandes);
-                            DgCommandes.ItemsSource = tableCommandes.DefaultView;
+                            dtCommandes.Clear();
+                            da.Fill(dtCommandes);
+
+                            // Liaison de la DataTable filtrable à la DataGrid
+                            DgCommandes.ItemsSource = dtCommandes.DefaultView;
                         }
                     }
                 }
+
                 CalculerStatistiques();
             }
-
-            private void CalculerStatistiques()
+            catch (Exception ex)
             {
-                if (tableCommandes == null) return;
+                MessageBox.Show($"Erreur lors du chargement des commandes : {ex.Message}", "Erreur de base de données", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void CalculerStatistiques()
+        {
+            if (dtCommandes == null) return;
 
-                int total = tableCommandes.Rows.Count;
-                int attente = tableCommandes.Select("statut_commande = 'En attente'").Length;
-                int cours = tableCommandes.Select("statut_commande = 'En traitement'").Length;
-                int pretes = tableCommandes.Select("statut_commande = 'Prête'").Length;
+            int total = dtCommandes.Rows.Count;
+            int enAttente = 0;
+            int enCours = 0;
+            int pretes = 0;
 
-                TxtStatTotal.Text = total.ToString();
-                TxtStatEnAttente.Text = attente.ToString();
-                TxtStatEnCours.Text = cours.ToString();
-                TxtStatPretes.Text = pretes.ToString();
+            foreach (DataRow row in dtCommandes.Rows)
+            {
+                string statut = row["statut_commande"]?.ToString() ?? "";
+
+                if (statut == "En attente")
+                    enAttente++;
+                else if (statut == "En cours de traitement" || statut == "En traitement")
+                    enCours++;
+                else if (statut == "Prête")
+                    pretes++;
             }
 
-            private void TxtRecherche_TextChanged(object sender, TextChangedEventArgs e)
+            // Injection des valeurs calculées dans les TextBlocks du XAML
+            TxtStatTotal.Text = total.ToString();
+            TxtStatEnAttente.Text = enAttente.ToString();
+            TxtStatEnCours.Text = enCours.ToString();
+            TxtStatPretes.Text = pretes.ToString();
+
+            // Mise à jour de la barre d'information en bas
+            TxtPaginationInfo.Text = $"Affichage de {total} commande(s) enregistrée(s)";
+        }
+
+        private void TxtRecherche_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Sécurité pour éviter le crash au chargement du composant
+            if (dtCommandes == null || dtCommandes.DefaultView == null || TxtRecherche == null)
+                return;
+
+            // Protection basique contre les injections de guillemets dans le filtre
+            string filtre = TxtRecherche.Text.Replace("'", "''").Trim();
+
+            if (string.IsNullOrEmpty(filtre))
             {
-                if (tableCommandes == null) return;
-
-                string filtre = TxtRecherche.Text.Trim().Replace("'", "''");
-                tableCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR nom_client LIKE '%{filtre}%'";
-                if (string.IsNullOrEmpty(filtre))
-                {
-                    tableCommandes.DefaultView.RowFilter = "";
-                }
-                else
-                {
-                    tableCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR nom_client LIKE '%{filtre}%'";
-                }
-
-                TxtPaginationInfo.Text = $"Affichage de {DgCommandes.Items.Count} commande(s) filtrée(s)";
+                dtCommandes.DefaultView.RowFilter = string.Empty;
+            }
+            else
+            {
+                // Filtre cumulatif : cherche soit dans le numéro de commande, soit dans le nom du client
+                dtCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR nom_client LIKE '%{filtre}%'";
             }
 
+            // Met à jour l'indicateur textuel du bas avec le nombre d'éléments actuellement visibles
+            TxtPaginationInfo.Text = $"Affichage de {DgCommandes.Items.Count} commande(s) correspondante(s)";
+        }
 
+        // ================================================================= -->
+        // 4. GESTION DES ACTIONS (AJOUT, MODIFICATION, SUPPRESSION)
+        // ================================================================= -->
+
+        // Clic sur "+ Nouvelle commande"
         private void BtnNouvelleCommande_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                NouvelleCommandeWindow win = new NouvelleCommandeWindow();
+            NouvelleCommandeWindow frm = new NouvelleCommandeWindow();
+            frm.Owner = this;
 
-                if (win.ShowDialog() == true)
-                {
-                    ChargerDonnees();
-                }
-            }
-            catch (Exception ex)
+            // Si le formulaire se ferme après une sauvegarde réussie (DialogResult = true)
+            if (frm.ShowDialog() == true)
             {
-                MessageBox.Show($"Erreur critique lors de l'ouverture du formulaire : {ex.Message}\n\nDétails : {ex.InnerException?.Message}",
-                                "Erreur d'ouverture",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                ChargerCommandes(); // Rafraîchissement automatique de la liste et des stats
             }
         }
 
-        private void ActualiserTout()
-        {
-            ChargerStatistiquesCommandes();
-            ChargerListeCommandes();
-        }
-
-        private void ChargerStatistiquesCommandes()
-        {
-            try
-            {
-                using (MySqlConnection conn = DbConnection.GetConnection())
-                {
-                    if (conn == null) return;
-
-                    string query = @"SELECT 
-                                        COUNT(*) AS total,
-                                        SUM(CASE WHEN statut_commande = 'En attente' THEN 1 ELSE 0 END) AS en_attente,
-                                        SUM(CASE WHEN statut_commande IN ('En cours de traitement', 'En traitement') THEN 1 ELSE 0 END) AS en_cours,
-                                        SUM(CASE WHEN statut_commande = 'Prête' THEN 1 ELSE 0 END) AS pretes
-                                     FROM commandes";
-
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
-                    using (MySqlDataReader dr = cmd.ExecuteReader())
-                    {
-                        if (dr.Read())
-                        {
-                            TxtStatTotal.Text = dr["total"].ToString();
-                            TxtStatEnAttente.Text = dr["en_attente"] != DBNull.Value ? dr["en_attente"].ToString() : "0";
-                            TxtStatEnCours.Text = dr["en_cours"] != DBNull.Value ? dr["en_cours"].ToString() : "0";
-                            TxtStatPretes.Text = dr["pretes"] != DBNull.Value ? dr["pretes"].ToString() : "0";
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erreur stats commandes : " + ex.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        // 2. Chargement de la DataGrid principale
-        private void ChargerListeCommandes()
-        {
-            try
-            {
-                using (MySqlConnection conn = DbConnection.GetConnection())
-                {
-                    if (conn == null) return;
-
-                    // Jointure avec la table clients pour récupérer le nom complet
-                    string query = @"SELECT 
-                                        c.id_commande,
-                                        c.numero_commande, 
-                                        cl.nom AS nom_client, 
-                                        c.statut_commande, 
-                                        c.date_commande, 
-                                        c.montant_total
-                                     FROM commandes c
-                                     INNER JOIN clients cl ON c.id_client = cl.id_client
-                                     ORDER BY c.date_commande DESC";
-
-                    MySqlDataAdapter da = new MySqlDataAdapter(query, conn);
-                    tableCommandes.Clear();
-                    da.Fill(tableCommandes);
-
-                    DgCommandes.ItemsSource = tableCommandes.DefaultView;
-
-                    TxtPaginationInfo.Text = $"Affichage de {tableCommandes.Rows.Count} commande(s)";
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erreur liste commandes : " + ex.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
+        // Action de modification via le bouton 📝
         private void BtnModifierCommande_Click(object sender, RoutedEventArgs e)
         {
-            Button? btn = sender as Button;
-            if (btn?.Tag != null)
+            if (sender is Button btn && btn.Tag != null)
             {
                 int idCommande = Convert.ToInt32(btn.Tag);
-                MessageBox.Show($"Ouvrir le formulaire de modification pour la commande ID : {idCommande}",
-                                "Modifier", MessageBoxButton.OK, MessageBoxImage.Information);
+                OuvrirFormulaireModification(idCommande);
             }
         }
 
+        // Action de modification via un double-clic sur une ligne du tableau
+        private void DgCommandes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (DgCommandes.SelectedItem is DataRowView rowView)
+            {
+                int idCommande = Convert.ToInt32(rowView["id_commande"]);
+                OuvrirFormulaireModification(idCommande);
+            }
+        }
+
+        // Centralisation de l'ouverture pour la modification
+        private void OuvrirFormulaireModification(int idCommande)
+        {
+            DataRow[] rows = dtCommandes.Select($"id_commande = {idCommande}");
+            if (rows.Length > 0)
+            {
+                NouvelleCommandeWindow frm = new NouvelleCommandeWindow(rows[0]);
+                frm.Owner = this;
+                if (frm.ShowDialog() == true)
+                {
+                    ChargerCommandes(); // Rafraîchit le tableau après modification
+                }
+            }
+        }
+
+        // Action de suppression via le bouton 🗑️
         private void BtnSupprimerCommande_Click(object sender, RoutedEventArgs e)
         {
-            Button? btn = sender as Button;
-            if (btn?.Tag != null)
+            if (sender is Button btn && btn.Tag != null)
             {
                 int idCommande = Convert.ToInt32(btn.Tag);
+
                 MessageBoxResult result = MessageBox.Show(
-                    "Êtes-vous sûr de vouloir supprimer cette commande ?",
-                    "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    "Voulez-vous vraiment supprimer définitivement cette commande ?",
+                    "Confirmation de suppression",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning
+                );
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    SupprimerCommandeDuDb(idCommande);
+                    try
+                    {
+                        using (MySqlConnection conn = new MySqlConnection(connectionString))
+                        {
+                            conn.Open();
+                            string query = "DELETE FROM commandes WHERE id_commande = @id";
+
+                            using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                            {
+                                cmd.Parameters.AddWithValue("@id", idCommande);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        // Recharger les données mises à jour
+                        ChargerCommandes();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Erreur lors de la suppression : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
         }
-        private void SupprimerCommandeDuDb(int idCommande)
+
+        // ================================================================= -->
+        // 5. NAVIGATION SIDEBAR ET SYSTÈME
+        // ================================================================= -->
+        private void BtnRetourDashboard_Click(object sender, RoutedEventArgs e) => this.Close();
+
+        private void BtnQuitter_Click(object sender, RoutedEventArgs e) => this.Close();
+
+        private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            try
+            MessageBoxResult result = MessageBox.Show("Êtes-vous sûr de vouloir vous déconnecter ?", "Déconnexion", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
             {
-                using (MySqlConnection conn = DbConnection.GetConnection())
-                {
-                    if (conn == null) return;
-
-                    // 1. On supprime d'abord les détails de la commande (clé étrangère)
-                    string queryDetails = "DELETE FROM detail_commandes WHERE id_commande = @id";
-                    using (MySqlCommand cmdDetails = new MySqlCommand(queryDetails, conn))
-                    {
-                        cmdDetails.Parameters.AddWithValue("@id", idCommande);
-                        cmdDetails.ExecuteNonQuery();
-                    }
-
-                    // 2. On supprime ensuite la commande elle-même
-                    string queryCommande = "DELETE FROM commandes WHERE id_commande = @id";
-                    using (MySqlCommand cmdCmd = new MySqlCommand(queryCommande, conn))
-                    {
-                        cmdCmd.Parameters.AddWithValue("@id", idCommande);
-                        cmdCmd.ExecuteNonQuery();
-                    }
-
-                    MessageBox.Show("Commande supprimée avec succès !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    // 3. On rafraîchit la DataGrid et les compteurs du haut instantanément
-                    ActualiserTout();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erreur lors de la suppression en base de données : " + ex.Message,
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                this.Close();
             }
         }
 
-        private void BtnRetourDashboard_Click(object sender, RoutedEventArgs e)
-            {
-                DashboardWindow dashboard = new DashboardWindow();
-                dashboard.Show();
-                this.Close();
-            }
-
-            private void BtnLogout_Click(object sender, RoutedEventArgs e)
-            {
-                LoginWindow login = new LoginWindow();
-                login.Show();
-                this.Close();
-            }
-        private void BtnQuitter_Click(object sender, RoutedEventArgs e)
+        private void BtnClients_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            ClientsWindow cltWin = new ClientsWindow();
+            cltWin.Show();
+            this.Close();
         }
     }
-   }
+}

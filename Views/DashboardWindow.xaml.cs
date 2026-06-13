@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ElKharis.Database;
+using ElKharis.Views;
 using MySql.Data.MySqlClient;
 
 namespace ElKharis.Views
@@ -145,7 +146,15 @@ namespace ElKharis.Views
 
         private void BtnClients_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Ouverture de la gestion des clients...", "Navigation", MessageBoxButton.OK, MessageBoxImage.Information);
+            MainFrame.Navigate(new ClientsWindow());
+        }
+        private void BtnArticles_Click(object sender, RoutedEventArgs e)
+        {
+            MainFrame.Navigate(new ArticlesWindow());
+        }
+        private void BtnServices_Click(object sender, RoutedEventArgs e)
+        {
+            MainFrame.Navigate(new ServicesWindow());
         }
 
         private void BtnCommandes_Click(object sender, RoutedEventArgs e)

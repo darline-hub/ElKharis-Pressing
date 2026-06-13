@@ -1,0 +1,140 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using MySql.Data.MySqlClient;
+using ElKharis.Models;
+
+namespace ElKharis.Views
+{
+    /// <summary>
+    /// Logique d'interaction pour ClientsWindow.xaml
+    /// </summary>
+    public partial class ClientsWindow : Window
+    {
+        private readonly string connectionString = "Server=localhost;Database=pressing_elkharis;Uid=root;Pwd=;";
+        private DataTable dtClients = new DataTable();
+
+        public ClientsWindow()
+        {
+            InitializeComponent();
+            ChargerTousLesClients();
+            TxtUserNom.Text = Session.NomUtilisateur;
+            TxtUserRole.Text = Session.Role;
+        }
+
+        private void ChargerTousLesClients()
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
+                {
+                    conn.Open();
+                    string query = "SELECT id_client, nom, prenom, sexe, telephone, email, ville, quartier, date_inscription, fidelite FROM clients ORDER BY nom ASC";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    MySqlDataAdapter da = new MySqlDataAdapter(cmd);
+
+                    dtClients.Clear();
+                    da.Fill(dtClients);
+                    DgClients.ItemsSource = dtClients.DefaultView;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void TxtRecherche_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // SÉCURITÉ : Empêche le plantage "Object reference not set..." au démarrage
+            if (dtClients == null || dtClients.DefaultView == null || TxtRecherche == null)
+                return;
+
+            string filtre = TxtRecherche.Text.Replace("'", "''");
+            dtClients.DefaultView.RowFilter = $"nom LIKE '%{filtre}%' OR prenom LIKE '%{filtre}%' OR telephone LIKE '%{filtre}%'";
+        }
+
+        // OUVRIR EN MODE AJOUT
+        private void BtnNouveauClient_Click(object sender, RoutedEventArgs e)
+        {
+            NouveauClientWindow frm = new NouveauClientWindow();
+            if (frm.ShowDialog() == true)
+            {
+                ChargerTousLesClients(); // Recharge le tableau si enregistré
+            }
+        }
+
+        // OUVRIR EN MODE MODIFICATION (via Bouton)
+        private void BtnModifierClient_Click(object sender, RoutedEventArgs e)
+        {
+            OuvrirFormulaireModification();
+        }
+
+        // OUVRIR EN MODE MODIFICATION (via Double-clic sur une ligne)
+        private void DgClients_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            OuvrirFormulaireModification();
+        }
+
+        private void OuvrirFormulaireModification()
+        {
+            if (DgClients.SelectedItem is DataRowView row)
+            {
+                // On passe la ligne sélectionnée au constructeur de la nouvelle fenêtre
+                NouveauClientWindow frm = new NouveauClientWindow(row);
+                if (frm.ShowDialog() == true)
+                {
+                    ChargerTousLesClients();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Veuillez sélectionner un client dans la liste à modifier.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        // SUPPRESSION
+        private void BtnSupprimerClient_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is DataRowView row)
+            {
+                string nomComplet = $"{row["nom"]} {row["prenom"]}";
+                int idClient = Convert.ToInt32(row["id_client"]);
+
+                MessageBoxResult result = MessageBox.Show($"Voulez-vous supprimer '{nomComplet}' ?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        using (MySqlConnection conn = new MySqlConnection(connectionString))
+                        {
+                            conn.Open();
+                            string query = "DELETE FROM clients WHERE id_client = @id";
+                            MySqlCommand cmd = new MySqlCommand(query, conn);
+                            cmd.Parameters.AddWithValue("@id", idClient);
+                            cmd.ExecuteNonQuery();
+                        }
+                        ChargerTousLesClients();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Erreur : Ce client possède des commandes.\n{ex.Message}", "Impossible", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
+    }
+}
+
