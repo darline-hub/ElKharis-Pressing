@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\NT Store\source\repos\ElKharis-Pressing\obj\Debug\net8.0-windows\
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\
 ElKharis
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-C:\Users\NT Store\source\repos\ElKharis-Pressing\App.xaml
-9986212379
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\App.xaml
+10-80995720
 
-17-1965340667
-206-108169764
-MainWindow.xaml;Views\ArticlesWindow.xaml;Views\ClientsWindow.xaml;Views\CommandesWindow.xaml;Views\DashboardWindow.xaml;Views\LoginWindow.xaml;Views\NouveauClientWindow.xaml;Views\NouvelleCommandeWindow.xaml;Views\ServicesWindow.xaml;
+18-1930190827
+207-1329412687
+MainWindow.xaml;Views\ArticlesWindow.xaml;Views\ClientsWindow.xaml;Views\CommandesWindow.xaml;Views\DashboardWindow.xaml;Views\LoginWindow.xaml;Views\NouveauClientWindow.xaml;Views\NouvelleCommandeWindow.xaml;Views\ServicesWindow.xaml;Views\SigninWindow.xaml;
 
-True
+False
 

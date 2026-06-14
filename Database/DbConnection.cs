@@ -13,7 +13,7 @@ namespace ElKharis.Database
     {
         private static string connectionString = "Server=localhost;Database=pressing_elkharis;Uid=root;Pwd=;";
 
-        public static MySqlConnection GetConnection()
+        public static MySqlConnection? GetConnection()
         {
             MySqlConnection conn = new MySqlConnection(connectionString);
             try

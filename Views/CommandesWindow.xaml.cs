@@ -30,7 +30,7 @@ namespace ElKharis.Views
                     conn.Open();
 
                     // Sélection des colonnes qui correspondent exactement à tes Bindings XAML
-                    string query = @"SELECT id_commande, numero_commande, nom_client, date_commande, montant_total, statut_commande 
+                    string query = @"SELECT id_commande, numero_commande, id_client, date_commande, montant_total, statut_commande 
                                      FROM commandes 
                                      ORDER BY date_commande DESC";
 
@@ -100,19 +100,12 @@ namespace ElKharis.Views
             }
             else
             {
-                // Filtre cumulatif : cherche soit dans le numéro de commande, soit dans le nom du client
-                dtCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR nom_client LIKE '%{filtre}%'";
+               
+                dtCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR id_client LIKE '%{filtre}%'";
             }
-
-            // Met à jour l'indicateur textuel du bas avec le nombre d'éléments actuellement visibles
             TxtPaginationInfo.Text = $"Affichage de {DgCommandes.Items.Count} commande(s) correspondante(s)";
         }
 
-        // ================================================================= -->
-        // 4. GESTION DES ACTIONS (AJOUT, MODIFICATION, SUPPRESSION)
-        // ================================================================= -->
-
-        // Clic sur "+ Nouvelle commande"
         private void BtnNouvelleCommande_Click(object sender, RoutedEventArgs e)
         {
             NouvelleCommandeWindow frm = new NouvelleCommandeWindow();
@@ -155,12 +148,11 @@ namespace ElKharis.Views
                 frm.Owner = this;
                 if (frm.ShowDialog() == true)
                 {
-                    ChargerCommandes(); // Rafraîchit le tableau après modification
+                    ChargerCommandes();
                 }
             }
         }
 
-        // Action de suppression via le bouton 🗑️
         private void BtnSupprimerCommande_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag != null)
@@ -201,10 +193,12 @@ namespace ElKharis.Views
             }
         }
 
-        // ================================================================= -->
-        // 5. NAVIGATION SIDEBAR ET SYSTÈME
-        // ================================================================= -->
-        private void BtnRetourDashboard_Click(object sender, RoutedEventArgs e) => this.Close();
+        private void BtnRetourDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            DashboardWindow dashboard = new DashboardWindow();
+            dashboard.Show();
+            this.Close();
+        }
 
         private void BtnQuitter_Click(object sender, RoutedEventArgs e) => this.Close();
 

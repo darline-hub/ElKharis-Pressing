@@ -40,21 +40,48 @@ namespace ElKharis.Views
                 using (MySqlConnection conn = new MySqlConnection(connectionString))
                 {
                     conn.Open();
-                    string query = "SELECT id_client, nom, prenom, sexe, telephone, email, ville, quartier, date_inscription, fidelite FROM clients ORDER BY nom ASC";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    MySqlDataAdapter da = new MySqlDataAdapter(cmd);
 
-                    dtClients.Clear();
-                    da.Fill(dtClients);
-                    DgClients.ItemsSource = dtClients.DefaultView;
+                    // Requête SQL intelligente : elle compte les commandes et détermine le statut de fidélité
+                    string query = @"
+                SELECT 
+                    c.id_client, 
+                    c.nom, 
+                    c.prenom, 
+                    c.sexe, 
+                    c.telephone, 
+                    c.email, 
+                    c.ville, 
+                    c.quartier, 
+                    c.date_inscription,
+                    COUNT(co.id_commande) AS nb_commandes,
+                    CASE 
+                        WHEN COUNT(co.id_commande) BETWEEN 0 AND 5 THEN 'Nouveau'
+                        WHEN COUNT(co.id_commande) BETWEEN 6 AND 15 THEN 'Fidèle'
+                        ELSE 'VIP'
+                    END AS fidelite
+                FROM clients c
+                LEFT JOIN commandes co ON c.id_client = co.id_client
+                GROUP BY c.id_client
+                ORDER BY c.nom ASC";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
+                        {
+                            DataTable dtClients = new DataTable();
+                            da.Fill(dtClients);
+
+                            // Liaison des données à ton DataGrid des clients
+                            DgClients.ItemsSource = dtClients.DefaultView;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors du chargement des clients : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void TxtRecherche_TextChanged(object sender, TextChangedEventArgs e)
         {
             // SÉCURITÉ : Empêche le plantage "Object reference not set..." au démarrage
@@ -89,10 +116,10 @@ namespace ElKharis.Views
 
         private void OuvrirFormulaireModification()
         {
-            if (DgClients.SelectedItem is DataRowView row)
+            if (DgClients.SelectedItem is DataRowView rowView)
             {
-                // On passe la ligne sélectionnée au constructeur de la nouvelle fenêtre
-                NouveauClientWindow frm = new NouveauClientWindow(row);
+                NouveauClientWindow frm = new NouveauClientWindow(rowView.Row);
+                frm.Owner = this;
                 if (frm.ShowDialog() == true)
                 {
                     ChargerTousLesClients();
@@ -135,6 +162,55 @@ namespace ElKharis.Views
                 }
             }
         }
+
+        private void BtnDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            DashboardWindow dashboard = new DashboardWindow();
+            dashboard.Show();
+            this.Close();
+        }
+
+        private void BtnArticles_Click(object sender, RoutedEventArgs e)
+        {
+            ArticlesWindow articles = new ArticlesWindow();
+            articles.Show();
+            this.Close();
+        }
+        private void BtnServices_Click(object sender, RoutedEventArgs e)
+        {
+            ServicesWindow services = new ServicesWindow();
+            services.Show();
+            this.Close();
+        }
+
+        private void BtnCommandes_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                CommandesWindow fenetreCommandes = new CommandesWindow();
+                fenetreCommandes.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des commandes : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnLogout_Click(object sender, RoutedEventArgs e)
+        {
+            LoginWindow login = new LoginWindow();
+            login.Show();
+            this.Close();
+        }
+
+        private void BtnQuitter_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
     }
+
 }
+
 

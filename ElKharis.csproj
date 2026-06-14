@@ -9,19 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\logo.png" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Controller\" />
+    <Folder Include="Resources\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="MySql.Data" Version="9.7.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Resources\logo.png" />
   </ItemGroup>
 
 </Project>

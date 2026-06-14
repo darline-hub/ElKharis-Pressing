@@ -37,7 +37,7 @@ namespace ElKharis.Views
         {
             try
             {
-                using (MySqlConnection conn = DbConnection.GetConnection())
+                using (MySqlConnection? conn = DbConnection.GetConnection())
                 {
                     if (conn == null) return;
 
@@ -74,7 +74,7 @@ namespace ElKharis.Views
         {
             try
             {
-                using (MySqlConnection conn = DbConnection.GetConnection())
+                using (MySqlConnection? conn = DbConnection.GetConnection())
                 {
                     if (conn == null) return;
 
@@ -106,7 +106,7 @@ namespace ElKharis.Views
         {
             try
             {
-                using (MySqlConnection conn = DbConnection.GetConnection())
+                using (MySqlConnection? conn = DbConnection.GetConnection())
                 {
                     if (conn == null) return;
 

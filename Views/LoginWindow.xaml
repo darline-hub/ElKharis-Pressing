@@ -49,6 +49,10 @@
                     </Border>
 
                     <Button Content="Se connecter" Background="#2B6CB0" Foreground="White" FontSize="14" FontWeight="Bold" Height="40" Cursor="Hand" BorderThickness="0" Click="BtnLogin_Click"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
+                        <TextBlock Text="Pas encore de compte ?" Foreground="#718096" FontSize="13"/>
+                        <Button Content="S'inscrire" Background="Transparent" Foreground="#2B6CB0" BorderThickness="0" FontSize="13" FontWeight="SemiBold" Margin="5,0,0,0" Cursor="Hand" Click="BtnAllerAInscription_Click"/>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Grid>

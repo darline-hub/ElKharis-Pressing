@@ -28,17 +28,37 @@ namespace ElKharis.Views
             InitializeComponent();
                 ChargerClients();
                 ChargerServices();
+            
 
-                TxtNumero.Text = "CMD-" + DateTime.Now.ToString("yyyyMMdd-HHmm");
+            TxtNumero.Text = "CMD-" + DateTime.Now.ToString("yyyyMMdd-HHmm");
 
                 DpLivraison.SelectedDate = DateTime.Now.AddDays(3);
-            }
+        }
+        // Variable globale dans ta fenêtre de commande pour stocker l'id reçu
+        private long _idClientSelectionne;
 
-            private void ChargerClients()
+        public NouvelleCommandeWindow(long idClient)
+        {
+            InitializeComponent();
+
+            this._idClientSelectionne = idClient;
+            CbClients.SelectedValue = idClient;
+
+        }
+
+        public NouvelleCommandeWindow(System.Data.DataRow rowCommande)
+        {
+            InitializeComponent();
+
+            // On garde une copie de la ligne si besoin pour charger les articles plus tard
+            TxtNumero.Text = rowCommande["numero_commande"].ToString();
+        }
+
+        private void ChargerClients()
             {
                 try
                 {
-                    using (MySqlConnection conn = DbConnection.GetConnection())
+                    using (MySqlConnection? conn = DbConnection.GetConnection())
                     {
                         if (conn == null) return;
 
@@ -60,7 +80,7 @@ namespace ElKharis.Views
             {
                 try
                 {
-                    using (MySqlConnection conn = DbConnection.GetConnection())
+                    using (MySqlConnection? conn = DbConnection.GetConnection())
                     {
                         if (conn == null) return;
 
@@ -121,7 +141,7 @@ namespace ElKharis.Views
 
                 try
                 {
-                    using (MySqlConnection conn = DbConnection.GetConnection())
+                    using (MySqlConnection? conn = DbConnection.GetConnection())
                     {
                         if (conn == null) return;
 

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\ElKharis.csproj": {}
+    "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj": {}
   },
   "projects": {
-    "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\ElKharis.csproj": {
+    "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\ElKharis.csproj",
+        "projectUniqueName": "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj",
         "projectName": "ElKharis",
-        "projectPath": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\ElKharis.csproj",
+        "projectPath": "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj",
         "packagesPath": "C:\\Users\\NT Store\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\obj\\",
+        "outputPath": "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -50,6 +50,10 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.2.0, )"
+            },
             "MySql.Data": {
               "target": "Package",
               "version": "[9.7.0, )"
