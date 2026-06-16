@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using MySql.Data.MySqlClient;
 using ElKharis.Database;
 using BCrypt.Net;
+using System.Text.RegularExpressions; // Déjà présent et maintenant exploité
 
 namespace ElKharis.Views
 {
@@ -16,6 +17,7 @@ namespace ElKharis.Views
         {
             InitializeComponent();
         }
+
         private void BtnSignin_Click(object sender, RoutedEventArgs e)
         {
             string username = TxtUsername.Text.Trim();
@@ -30,18 +32,29 @@ namespace ElKharis.Views
                 role = selectedItem.Content?.ToString() ?? "Réceptionniste";
             }
 
+            // 1. VÉRIFICATION DES CHAMPS VIDES
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
                 MessageBox.Show("Veuillez remplir tous les champs obligatoires !", "Champs incomplets", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (!email.Contains("@") || !email.Contains("."))
+            // 2. VÉRIFICATION STRICTE DE L'EMAIL (Regex professionnelle avec '@' et domaine)
+            string modeleEmail = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(email, modeleEmail))
             {
-                MessageBox.Show("Veuillez entrer une adresse email valide !", "Format incorrect", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Veuillez entrer une adresse email valide contenant un symbole '@' et un domaine (ex: nom@email.com) !", "Format incorrect", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            // 3. SÉCURITÉ : VÉRIFICATION DE LA LONGUEUR DU MOT DE PASSE (Minimum 6 caractères)
+            if (password.Length < 6)
+            {
+                MessageBox.Show("Le mot de passe doit contenir au moins 6 caractères pour des raisons de sécurité.", "Mot de passe trop court", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Hachage sécurisé du mot de passe après validation
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
             try
@@ -84,6 +97,12 @@ namespace ElKharis.Views
                         cmd.Parameters.AddWithValue("@p_role", role);
                         cmd.Parameters.AddWithValue("@p_mdp", hashedPassword);
 
+                        if (TxtPassword.Password.Length < 6)
+                        {
+                            MessageBox.Show("Le mot de passe doit contenir au moins 6 caractères pour des raisons de sécurité.",
+                                            "Mot de passe trop court", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
                         int lignesModifiees = cmd.ExecuteNonQuery();
                         if (lignesModifiees > 0)
                         {

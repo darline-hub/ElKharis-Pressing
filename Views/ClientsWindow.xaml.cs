@@ -62,7 +62,7 @@ namespace ElKharis.Views
                 FROM clients c
                 LEFT JOIN commandes co ON c.id_client = co.id_client
                 GROUP BY c.id_client
-                ORDER BY c.nom ASC";
+                ORDER BY c.id_client ASC";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
@@ -82,14 +82,24 @@ namespace ElKharis.Views
                 MessageBox.Show($"Erreur lors du chargement des clients : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private void TxtRecherche_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // SÉCURITÉ : Empêche le plantage "Object reference not set..." au démarrage
+            // Sécurité pour éviter le crash au chargement du composant
             if (dtClients == null || dtClients.DefaultView == null || TxtRecherche == null)
                 return;
 
-            string filtre = TxtRecherche.Text.Replace("'", "''");
-            dtClients.DefaultView.RowFilter = $"nom LIKE '%{filtre}%' OR prenom LIKE '%{filtre}%' OR telephone LIKE '%{filtre}%'";
+            // Protection basique contre les injections de guillemets dans le filtre
+            string filtre = TxtRecherche.Text.Replace("'", "''").Trim();
+
+            if (string.IsNullOrEmpty(filtre))
+            {
+                dtClients.DefaultView.RowFilter = string.Empty;
+            }
+            else
+            {
+                dtClients.DefaultView.RowFilter = $"nom LIKE '%{filtre}%' OR prenom LIKE '%{filtre}%' OR telephone LIKE '%{filtre}%'";
+            }
         }
 
         // OUVRIR EN MODE AJOUT
@@ -165,22 +175,51 @@ namespace ElKharis.Views
 
         private void BtnDashboard_Click(object sender, RoutedEventArgs e)
         {
-            DashboardWindow dashboard = new DashboardWindow();
-            dashboard.Show();
-            this.Close();
+            try
+            {
+                DashboardWindow dashboard = new DashboardWindow();
+                dashboard.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre du tableau de bord : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
 
         private void BtnArticles_Click(object sender, RoutedEventArgs e)
         {
-            ArticlesWindow articles = new ArticlesWindow();
-            articles.Show();
-            this.Close();
+            try
+            {
+                ArticlesWindow articles = new ArticlesWindow();
+                articles.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des articles : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            
         }
         private void BtnServices_Click(object sender, RoutedEventArgs e)
         {
-            ServicesWindow services = new ServicesWindow();
-            services.Show();
-            this.Close();
+            try
+            {
+                ServicesWindow services = new ServicesWindow();
+                services.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des services : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnCommandes_Click(object sender, RoutedEventArgs e)

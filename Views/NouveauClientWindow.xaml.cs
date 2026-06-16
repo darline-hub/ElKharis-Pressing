@@ -22,31 +22,27 @@ namespace ElKharis.Views
     /// </summary>
     public partial class NouveauClientWindow : Window
     {
-        private readonly string connectionString = "Server=localhost;Database=pressing_elkharis;Uid=root;Pwd=;";
-
-        private bool isEditMode = false;
         private int clientIdModif = 0;
 
         public NouveauClientWindow()
         {
             InitializeComponent();
-            isEditMode = false;
         }
+
         public NouveauClientWindow(DataRow rowModif)
         {
             InitializeComponent();
-            isEditMode = true;
 
             // Récupération de l'ID unique du client à modifier
             clientIdModif = Convert.ToInt32(rowModif["id_client"]);
 
             // Remplissage automatique des champs XAML avec les données actuelles de la ligne SQL
-            TxtNom.Text = rowModif["nom"]?.ToString();
-            TxtPrenom.Text = rowModif["prenom"]?.ToString();
-            TxtTelephone.Text = rowModif["telephone"]?.ToString();
-            TxtEmail.Text = rowModif["email"]?.ToString();
-            TxtVille.Text = rowModif["ville"]?.ToString();
-            TxtQuartier.Text = rowModif["quartier"]?.ToString();
+            TxtNom.Text = rowModif["nom"]?.ToString() ?? string.Empty;
+            TxtPrenom.Text = rowModif["prenom"]?.ToString() ?? string.Empty;
+            TxtTelephone.Text = rowModif["telephone"]?.ToString() ?? string.Empty;
+            TxtEmail.Text = rowModif["email"]?.ToString() ?? string.Empty;
+            TxtVille.Text = rowModif["ville"]?.ToString() ?? string.Empty;
+            TxtQuartier.Text = rowModif["quartier"]?.ToString() ?? string.Empty;
 
             // Gestion du ComboBox Sexe
             string sexe = rowModif["sexe"]?.ToString() ?? "M";
@@ -56,6 +52,7 @@ namespace ElKharis.Views
                 else if (sexe == "F" || sexe == "Féminin") CboSexe.SelectedIndex = 1;
             }
         }
+
         private void BtnEnregistrer_Click(object sender, RoutedEventArgs e)
         {
             string nom = TxtNom.Text.Trim();
@@ -68,30 +65,20 @@ namespace ElKharis.Views
             string sexe = "M";
             if (CboSexe?.SelectedItem is ComboBoxItem selectedItem)
             {
-                sexe = selectedItem.Content?.ToString() ?? "M"; // (Tu peux laisser ton code de sexe existant ici)
+                sexe = selectedItem.Content?.ToString() ?? "M";
             }
 
-            // 1. Validation des champs requis
             if (string.IsNullOrEmpty(nom) || string.IsNullOrEmpty(telephone))
             {
                 MessageBox.Show("Le nom et le numéro de téléphone sont obligatoires !", "Données manquantes", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // CORRECTION 3 : Exiger STRICTEMENT le caractère '@' et un point si l'email est renseigné
-            if (!string.IsNullOrEmpty(email))
+            // Exigence stricte du caractère '@' et '.' si l'email est rempli
+            if (!string.IsNullOrEmpty(email) && (!email.Contains("@") || !email.Contains(".")))
             {
-                if (!email.Contains("@") || !email.Contains("."))
-                {
-                    MessageBox.Show("Veuillez entrer une adresse email valide contenant un '@' et un point !", "Format Email Incorrect", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-            }
-            else
-            {
-                // Si tu veux que l'email soit TOUJOURS obligatoire (pas optionnel), active ce bloc :
-                // MessageBox.Show("L'adresse email est obligatoire !", "Données manquantes", MessageBoxButton.OK, MessageBoxImage.Warning);
-                // return;
+                MessageBox.Show("Veuillez entrer une adresse email valide !", "Format Incorrect", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
 
             long nouveauIdClient = 0;
@@ -103,9 +90,20 @@ namespace ElKharis.Views
                     if (conn == null) return;
                     if (conn.State != System.Data.ConnectionState.Open) conn.Open();
 
-                    // Requête d'insertion simple
-                    string query = @"INSERT INTO clients (nom, prenom, sexe, telephone, email, ville, quartier) 
-                            VALUES (@nom, @prenom, @sexe, @telephone, @email, @ville, @quartier)";
+                    string query;
+                    // Si clientIdModif > 0, on met à jour le client existant (Mode Edition), sinon on fait un INSERT
+                    if (clientIdModif > 0)
+                    {
+                        query = @"UPDATE clients 
+                                  SET nom = @nom, prenom = @prenom, sexe = @sexe, telephone = @telephone, 
+                                      email = @email, ville = @ville, quartier = @quartier 
+                                  WHERE id_client = @id_client";
+                    }
+                    else
+                    {
+                        query = @"INSERT INTO clients (nom, prenom, sexe, telephone, email, ville, quartier) 
+                                  VALUES (@nom, @prenom, @sexe, @telephone, @email, @ville, @quartier)";
+                    }
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
@@ -117,30 +115,44 @@ namespace ElKharis.Views
                         cmd.Parameters.AddWithValue("@ville", ville);
                         cmd.Parameters.AddWithValue("@quartier", quartier);
 
+                        if (clientIdModif > 0)
+                        {
+                            cmd.Parameters.AddWithValue("@id_client", clientIdModif);
+                        }
+
                         cmd.ExecuteNonQuery();
                     }
 
-                    // CORRECTION REFIABILISÉE POUR L'ID : On récupère l'id de manière isolée et sécurisée
-                    string idQuery = "SELECT LAST_INSERT_ID();";
-                    using (MySqlCommand idCmd = new MySqlCommand(idQuery, conn))
+                    // Enregistrement de l'identifiant pour la suite du traitement
+                    if (clientIdModif > 0)
                     {
-                        nouveauIdClient = Convert.ToInt64(idCmd.ExecuteScalar());
+                        nouveauIdClient = clientIdModif;
+                    }
+                    else
+                    {
+                        // Récupération sécurisée du dernier ID inséré pour un nouveau client
+                        using (MySqlCommand idCmd = new MySqlCommand("SELECT LAST_INSERT_ID();", conn))
+                        {
+                            nouveauIdClient = Convert.ToInt64(idCmd.ExecuteScalar());
+                        }
                     }
                 }
 
                 MessageBox.Show($"Client '{nom}' enregistré avec succès !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                // Action de redirection vers la commande
-                if (ChkOuvrirCommande.IsChecked == true && nouveauIdClient > 0)
+                // Si l'utilisateur veut lier immédiatement une commande (Uniquement disponible sur l'élément graphique s'il existe)
+                if (ChkOuvrirCommande != null && ChkOuvrirCommande.IsChecked == true && nouveauIdClient > 0)
                 {
-                    this.Hide();
+                    this.Visibility = Visibility.Collapsed; // On cache proprement la fiche client
 
-                    // Appel de la fenêtre de commande
+                    // On ouvre la commande en lui donnant le nouvel ID
                     NouvelleCommandeWindow cmdWindow = new NouvelleCommandeWindow(nouveauIdClient);
                     cmdWindow.Owner = this.Owner;
                     cmdWindow.ShowDialog();
                 }
 
+                // IMPORTANT : Qu'on ait fait une commande ou pas, ou qu'on ait annulé la commande, 
+                // on valide TOUJOURS le DialogResult pour forcer la liste en arrière-plan à se recharger.
                 this.DialogResult = true;
                 this.Close();
             }
@@ -150,16 +162,13 @@ namespace ElKharis.Views
             }
         }
 
-
-
-
-        
         private void BtnAnnuler_Click(object sender, RoutedEventArgs e)
         {
             // Ferme simplement la fenêtre sans sauvegarder
             this.DialogResult = false;
             this.Close();
         }
+
         private void BtnFermer_Click(object sender, RoutedEventArgs e)
         {
             this.Close();

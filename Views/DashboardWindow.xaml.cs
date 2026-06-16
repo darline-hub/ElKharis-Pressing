@@ -110,12 +110,13 @@ namespace ElKharis.Views
                 {
                     if (conn == null) return;
 
+                    // CORRECTION : Remplacement de s.id_service par s.id
                     string query = @"SELECT 
                                 s.nom_service, 
-                                COUNT(dc.id_service) AS total_demandes
+                                COUNT(dc.id) AS total_demandes
                              FROM detail_commandes dc
-                             INNER JOIN services s ON dc.id_service = s.id_service
-                             GROUP BY s.id_service, s.nom_service
+                             INNER JOIN services s ON dc.id = s.id
+                             GROUP BY s.id, s.nom_service
                              ORDER BY total_demandes DESC
                              LIMIT 3";
 
@@ -146,17 +147,51 @@ namespace ElKharis.Views
 
         private void BtnClients_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(new ClientsWindow());
+            try
+            {
+                ClientsWindow cltWin = new ClientsWindow();
+                cltWin.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des clients : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            
         }
         private void BtnArticles_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(new ArticlesWindow());
+            try
+            {
+                ArticlesWindow articles = new ArticlesWindow();
+                articles.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des articles : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
         private void BtnServices_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(new ServicesWindow());
-        }
+            try
+            {
+                ServicesWindow services = new ServicesWindow();
+                services.Show();
+                this.Close();
 
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des services : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         private void BtnCommandes_Click(object sender, RoutedEventArgs e)
         {
             try

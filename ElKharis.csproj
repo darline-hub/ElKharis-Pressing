@@ -9,8 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\logo.jpeg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\logo.jpeg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Controller\" />
-    <Folder Include="Resources\" />
   </ItemGroup>
 
   <ItemGroup>

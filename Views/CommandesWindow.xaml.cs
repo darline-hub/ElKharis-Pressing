@@ -30,9 +30,10 @@ namespace ElKharis.Views
                     conn.Open();
 
                     // Sélection des colonnes qui correspondent exactement à tes Bindings XAML
-                    string query = @"SELECT id_commande, numero_commande, id_client, date_commande, montant_total, statut_commande 
-                                     FROM commandes 
-                                     ORDER BY date_commande DESC";
+                    string query = @"SELECT id_commande, numero_commande, id_client, date_commande, statut_commande,
+                                    date_livraison_prevue, montant_total, reduction, avance, statut_commande, reste_a_payer 
+                             FROM commandes 
+                             ORDER BY date_commande DESC";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
@@ -54,6 +55,7 @@ namespace ElKharis.Views
                 MessageBox.Show($"Erreur lors du chargement des commandes : {ex.Message}", "Erreur de base de données", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private void CalculerStatistiques()
         {
             if (dtCommandes == null) return;
@@ -67,7 +69,7 @@ namespace ElKharis.Views
             {
                 string statut = row["statut_commande"]?.ToString() ?? "";
 
-                if (statut == "En attente")
+                if (statut == "En attente" || statut == "Creer") // Ajout du statut initial
                     enAttente++;
                 else if (statut == "En cours de traitement" || statut == "En traitement")
                     enCours++;
@@ -100,41 +102,37 @@ namespace ElKharis.Views
             }
             else
             {
-               
                 dtCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR id_client LIKE '%{filtre}%'";
             }
             TxtPaginationInfo.Text = $"Affichage de {DgCommandes.Items.Count} commande(s) correspondante(s)";
         }
 
-        private void BtnNouvelleCommande_Click(object sender, RoutedEventArgs e)
-        {
-            NouvelleCommandeWindow frm = new NouvelleCommandeWindow();
-            frm.Owner = this;
-
-            // Si le formulaire se ferme après une sauvegarde réussie (DialogResult = true)
-            if (frm.ShowDialog() == true)
-            {
-                ChargerCommandes(); // Rafraîchissement automatique de la liste et des stats
-            }
-        }
-
-        // Action de modification via le bouton 📝
+        // LA MÉTHODE PARFAITE UNIQUE (L'autre doublon a été supprimé)
         private void BtnModifierCommande_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag != null)
-            {
-                int idCommande = Convert.ToInt32(btn.Tag);
-                OuvrirFormulaireModification(idCommande);
-            }
-        }
+            // 1. Récupération du bouton cliqué
+            Button btn = (Button)sender;
 
-        // Action de modification via un double-clic sur une ligne du tableau
-        private void DgCommandes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (DgCommandes.SelectedItem is DataRowView rowView)
+            // 2. Récupération de la ligne du tableau associée (DataRowView)
+            if (btn.DataContext is DataRowView ligneSelectionnee)
             {
-                int idCommande = Convert.ToInt32(rowView["id_commande"]);
-                OuvrirFormulaireModification(idCommande);
+                // Extraction de la ligne brute (DataRow)
+                DataRow commandeRow = ligneSelectionnee.Row;
+
+                // 3. Instance de la fenêtre de commande en lui passant la ligne de données pour la préremplir
+                NouvelleCommandeWindow modifWindow = new NouvelleCommandeWindow(commandeRow);
+                modifWindow.Owner = this; // Définit la fenêtre parente pour un affichage centré
+
+                // 4. OUVERTURE DU FORMULAIRE DEVANT TOI
+                if (modifWindow.ShowDialog() == true)
+                {
+                    // Si l'utilisateur a enregistré des modifications, on rafraîchit le tableau principal
+                    ChargerCommandes();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Impossible de récupérer les données de la commande sélectionnée.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -213,9 +211,69 @@ namespace ElKharis.Views
 
         private void BtnClients_Click(object sender, RoutedEventArgs e)
         {
-            ClientsWindow cltWin = new ClientsWindow();
-            cltWin.Show();
-            this.Close();
+            try
+            {
+                ClientsWindow cltWin = new ClientsWindow();
+                cltWin.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des clients : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
+        private void BtnArticles_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ArticlesWindow articles = new ArticlesWindow();
+                articles.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des articles : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnServices_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ServicesWindow services = new ServicesWindow();
+                services.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des services : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnNouvelleCommande_Click(object sender, RoutedEventArgs e)
+        {
+            NouvelleCommandeWindow saisieWindow = new NouvelleCommandeWindow();
+            saisieWindow.Owner = this;
+            if (saisieWindow.ShowDialog() == true)
+            {
+                ChargerCommandes();
+            }
+        }
+
+        private void DgCommandes_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (DgCommandes.SelectedItem is DataRowView ligneSelectionnee)
+            {
+                DataRow commandeRow = ligneSelectionnee.Row;
+                NouvelleCommandeWindow modifWindow = new NouvelleCommandeWindow(commandeRow);
+                modifWindow.Owner = this;
+                if (modifWindow.ShowDialog() == true)
+                {
+                    ChargerCommandes();
+                }
+            }
+        }
+        
     }
 }
