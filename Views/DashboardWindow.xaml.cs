@@ -16,6 +16,7 @@ using ElKharis.Database;
 using ElKharis.Views;
 using MySql.Data.MySqlClient;
 using ElKharis.Models;
+using ElKharis.Services;
 
 namespace ElKharis.Views
 {

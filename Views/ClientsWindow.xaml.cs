@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using MySql.Data.MySqlClient;
 using ElKharis.Models;
+using ElKharis.Services;
 
 namespace ElKharis.Views
 {

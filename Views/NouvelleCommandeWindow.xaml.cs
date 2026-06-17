@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using MySql.Data.MySqlClient;
 using ElKharis.Database;
-using ElKharis.Models;
+using ElKharis.Services;
 
 namespace ElKharis.Views
 {
@@ -193,7 +193,7 @@ namespace ElKharis.Views
                         {
                             cmdCmd.Parameters.AddWithValue("@num", numero);
                             cmdCmd.Parameters.AddWithValue("@id_client", CbClients.SelectedValue);
-                            cmdCmd.Parameters.AddWithValue("@date_c", DateTime.Now); 
+                            cmdCmd.Parameters.AddWithValue("@date_c", DateTime.Now);
                             cmdCmd.Parameters.AddWithValue("@total", total);
                             cmdCmd.Parameters.AddWithValue("@reduc", reduction);
                             cmdCmd.Parameters.AddWithValue("@avance", avance);
@@ -236,24 +236,58 @@ namespace ElKharis.Views
 
                     transaction.Commit();
 
-                    // CA-GFacture-010 & CA-GFacture-014 : Génération automatique après validation
-                    if (resteAPayer > 0)
+                    // 1. Déclarer la variable pour stocker le chemin du fichier
+                    string cheminChoisi = "";
+
+                    // 2. Récupérer le nom du client depuis votre formulaire pour nommer proprement le fichier
+                    // (Exemple : TxtNomClient.Text ou la variable que vous utilisez dans votre fenêtre)
+                    string nomClientPourFichier = "Client";
+                    if (this.DataContext is DataRowView drv)
                     {
-                        DocumentService.GenererDocumentPDF(idCommandeResultat, "REÇU"); // CA-GFacture-012
-                    }
-                    else
-                    {
-                        DocumentService.GenererDocumentPDF(idCommandeResultat, "FACTURE"); // CA-GFacture-015
+                        nomClientPourFichier = drv["nom"]?.ToString() ?? "Client";
                     }
 
-                    MessageBox.Show($"Opération réussie. Statut commande : {statutActuel}", "Succès ElKharis", MessageBoxButton.OK, MessageBoxImage.Information);
-                    this.DialogResult = true;
-                    this.Close();
-                }
-                catch (Exception ex)
+                    // 3. Déterminer le type de document par défaut pour la boîte de dialogue
+                    string typeDocumentInitial = (resteAPayer > 0) ? "REÇU_DE_DÉPÔT" : "FACTURE";
+
+                    // 4. Ouvrir la boîte de dialogue "Enregistrer sous"
+                    Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+                    saveFileDialog.Filter = "Document PDF (*.pdf)|*.pdf";
+                    saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    saveFileDialog.FileName = $"{typeDocumentInitial}_{idCommandeResultat}_{nomClientPourFichier.Replace(" ", "_")}";
+
+                    if (saveFileDialog.ShowDialog() == true)
+                    {
+                        // On affecte la valeur choisie par l'utilisateur à la variable
+                        cheminChoisi = saveFileDialog.FileName;
+
+                        try
+                        {
+                            // 5. Votre bloc If/Else mis à jour avec les 3 paramètres requis
+                            if (resteAPayer > 0)
+                            {
+                                ElKharis.Services.DocumentService.GenererDocumentPDF(idCommandeResultat, "REÇU DE DÉPÔT", cheminChoisi);
+                            }
+                            else
+                            {
+                                ElKharis.Services.DocumentService.GenererDocumentPDF(idCommandeResultat, "FACTURE", cheminChoisi);
+                            }
+
+                            // 6. Ouvrir instantanément le PDF pour prévisualisation et impression
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(cheminChoisi)
+                            {
+                                UseShellExecute = true
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Erreur lors de la création ou de l'ouverture du PDF : {ex.Message}", "Erreur PDF", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+
+                }catch (Exception ex)
                 {
-                    transaction.Rollback();
-                    MessageBox.Show($"Erreur SQL : {ex.Message}", "Échec", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Une erreur est survenue : {ex.Message}");
                 }
             }
         }

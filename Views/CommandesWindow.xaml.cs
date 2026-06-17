@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using MySql.Data.MySqlClient;
 using ElKharis.Models;
+using ElKharis.Services;
 
 namespace ElKharis.Views
 {

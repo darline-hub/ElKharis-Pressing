@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,9 +13,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using ElKharis.Models;
-using MySql.Data.MySqlClient;
 using ElKharis.Database;
+using ElKharis.Models;
+using ElKharis.Services;
+using Microsoft.Win32;
+using MySql.Data.MySqlClient;
 
 namespace ElKharis.Views
 {
@@ -45,7 +48,7 @@ namespace ElKharis.Views
                                                 c.reduction, c.avance, c.statut_commande,
                                                 (c.montant_total - c.reduction) AS net_a_payer,
                                                 (c.montant_total - c.reduction - c.avance) AS reste_a_payer,
-                                                CONCAT(cl.nom, ' ', IFNULL(cl.prenom, '')) AS nom_client
+                                                CONCAT(cl.nom, ' ', IFNULL(cl.prenom, '')) AS nom
                                          FROM commandes c
                                          INNER JOIN clients cl ON c.id_client = cl.id_client";
 
@@ -102,18 +105,53 @@ namespace ElKharis.Views
         // ACTION 1 : Visualiser le document PDF associé
         private void BtnVoirPDF_Click(object sender, RoutedEventArgs e)
         {
-            Button btn = (Button)sender;
-            if (btn.DataContext is DataRowView ligneSelectionnee)
+            // 1. On récupère le bouton qui a été cliqué
+            if (sender is Button btn)
             {
-                int idCommande = Convert.ToInt32(ligneSelectionnee["id_commande"]);
-                decimal reste = Convert.ToDecimal(ligneSelectionnee["reste_a_payer"]);
+                // 2. On extrait la ligne de données associée au bouton cliqué
+                if (btn.DataContext is DataRowView ligneSelectionnee)
+                {
+                    // Récupération des informations de la base de données mappées dans votre DataGrid
+                    int idCommande = Convert.ToInt32(ligneSelectionnee["id_commande"]);
+                    string nomClient = ligneSelectionnee["nom"].ToString()?? "";
 
-                string typeDocument = reste > 0 ? "REÇU" : "FACTURE";
+                    // On détermine dynamiquement le type de document en fonction du statut ou de l'onglet
+                    string statut = ligneSelectionnee["statut_commande"].ToString() ?? "";
+                    string typeDoc = (statut == "Terminée" || statut == "Payée") ? "FACTURE" : "REÇU DE DÉPÔT";
 
-                // Régénère ou ouvre directement le document PDF ciblé via notre service centralisé
-                DocumentService.GenererDocumentPDF(idCommande, typeDocument);
+                    // 3. OUVRIR LA BOÎTE DE DIALOGUE "ENREGISTRER SOUS" (Choix du dossier et du nom)
+                    SaveFileDialog saveFileDialog = new SaveFileDialog();
+                    saveFileDialog.Filter = "Document PDF (*.pdf)|*.pdf";
+                    saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+                    // Génère un nom de fichier propre (ex: FACTURE_14_Nom_Client.pdf)
+                    string nomFichierPropre = $"{typeDoc.Replace(" ", "_")}_{idCommande}_{nomClient.Replace(" ", "_")}";
+                    saveFileDialog.FileName = nomFichierPropre;
+
+                    if (saveFileDialog.ShowDialog() == true)
+                    {
+                        string cheminChoisi = saveFileDialog.FileName;
+
+                        try
+                        {
+                            // 4. GENERATION DU BEAU PDF ÉPURÉ
+                            DocumentService.GenererDocumentPDF(idCommande, typeDoc, cheminChoisi);
+
+                            // 5. APPERÇU / VISUALISATION IMMÉDIATE (Comme le Ctrl+P du navigateur)
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(cheminChoisi)
+                            {
+                                UseShellExecute = true
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Impossible d'ouvrir le PDF pour prévisualisation : {ex.Message}", "Erreur d'ouverture", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
             }
         }
+
 
         // ACTION 2 : Encaisser le solde restant (Livraison ou règlement intermédiaire)
         private void BtnEncaisserSolde_Click(object sender, RoutedEventArgs e)
@@ -122,10 +160,11 @@ namespace ElKharis.Views
             if (btn.DataContext is DataRowView ligneSelectionnee)
             {
                 int idCommande = Convert.ToInt32(ligneSelectionnee["id_commande"]);
-                string numeroCmd = ligneSelectionnee["numero_commande"]?.ToString()?? "";
+                string numeroCmd = ligneSelectionnee["numero_commande"]?.ToString() ?? "";
                 decimal resteAPayer = Convert.ToDecimal(ligneSelectionnee["reste_a_payer"]);
                 decimal totalActuel = Convert.ToDecimal(ligneSelectionnee["montant_total"]);
                 decimal avanceActuelle = Convert.ToDecimal(ligneSelectionnee["avance"]);
+                string nomClient = ligneSelectionnee["nom"]?.ToString() ?? "Client";
 
                 MessageBoxResult result = MessageBox.Show(
                     $"Confirmez-vous le paiement du solde restant de {resteAPayer:N0} FCFA pour la commande {numeroCmd} ?",
@@ -133,53 +172,121 @@ namespace ElKharis.Views
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    using (MySqlConnection conn = new MySqlConnection(connectionString))
+                    // 1. OUVRIR LA BOÎTE DE DIALOGUE AVANT DE MODIFIER LA BASE DE DONNÉES
+                    // Cela évite de valider un paiement si l'utilisateur annule l'enregistrement du PDF
+                    Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+                    saveFileDialog.Filter = "Document PDF (*.pdf)|*.pdf";
+                    saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    saveFileDialog.FileName = $"FACTURE_{idCommande}_{nomClient.Replace(" ", "_")}";
+
+                    if (saveFileDialog.ShowDialog() == true)
                     {
-                        conn.Open();
-                        MySqlTransaction tx = conn.BeginTransaction();
+                        string cheminChoisi = saveFileDialog.FileName;
 
-                        try
+                        using (MySqlConnection conn = new MySqlConnection(connectionString))
                         {
-                            // 1. Mettre à jour la table commandes : l'avance cumulée devient égale au net à payer
-                            string queryUpdateCommande = @"UPDATE commandes 
-                                                           SET avance = avance + @solde, 
-                                                               statut_commande = 'Payée' 
-                                                           WHERE id_commande = @id";
-                            using (MySqlCommand cmdUp = new MySqlCommand(queryUpdateCommande, conn, tx))
+                            conn.Open();
+                            MySqlTransaction tx = conn.BeginTransaction();
+
+                            try
                             {
-                                cmdUp.Parameters.AddWithValue("@solde", resteAPayer);
-                                cmdUp.Parameters.AddWithValue("@id", idCommande);
-                                cmdUp.ExecuteNonQuery();
-                            }
+                                // 2. Mettre à jour la table commandes
+                                string queryUpdateCommande = @"UPDATE commandes 
+                                                       SET avance = avance + @solde, 
+                                                           statut_commande = 'Payée' 
+                                                       WHERE id_commande = @id";
+                                using (MySqlCommand cmdUp = new MySqlCommand(queryUpdateCommande, conn, tx))
+                                {
+                                    cmdUp.Parameters.AddWithValue("@solde", resteAPayer);
+                                    cmdUp.Parameters.AddWithValue("@id", idCommande);
+                                    cmdUp.ExecuteNonQuery();
+                                }
 
-                            // 2. Insérer une nouvelle ligne d'enregistrement dans la table `paiements`
-                            string queryInsertPaiement = @"INSERT INTO paiements 
-                                                           (id_commande, montant_verse, mode_paiement, statut_reglement) 
-                                                           VALUES (@id, @montant, 'Espèces', 'Soldé')";
-                            using (MySqlCommand cmdPay = new MySqlCommand(queryInsertPaiement, conn, tx))
+                                // 3. Insérer une nouvelle ligne d'enregistrement dans la table `paiements`
+                                string queryInsertPaiement = @"INSERT INTO paiements 
+                                                       (id_commande, montant_verse, mode_paiement, statut_reglement) 
+                                                       VALUES (@id, @montant, 'Espèces', 'Soldé')";
+                                using (MySqlCommand cmdPay = new MySqlCommand(queryInsertPaiement, conn, tx))
+                                {
+                                    cmdPay.Parameters.AddWithValue("@id", idCommande);
+                                    cmdPay.Parameters.AddWithValue("@montant", resteAPayer);
+                                    cmdPay.ExecuteNonQuery();
+                                }
+
+                                tx.Commit();
+
+                                // 4. GENERATION AVEC LE TROISIÈME PARAMÈTRE REQUIS
+                                DocumentService.GenererDocumentPDF(idCommande, "FACTURE", cheminChoisi);
+
+                                MessageBox.Show($"Le règlement a été enregistré. La commande {numeroCmd} est maintenant SOLDÉE. La facture définitive a été émise.", "Règlement Validé", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                                // 5. APPERÇU AUTOMATIQUE DE LA FACTURE CHISIE
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(cheminChoisi)
+                                {
+                                    UseShellExecute = true
+                                });
+
+                                // Rafraîchir les listes
+                                ChargerDonnees(TxtRecherche.Text.Trim());
+                            }
+                            catch (Exception ex)
                             {
-                                cmdPay.Parameters.AddWithValue("@id", idCommande);
-                                cmdPay.Parameters.AddWithValue("@montant", resteAPayer);
-                                cmdPay.ExecuteNonQuery();
+                                tx.Rollback();
+                                MessageBox.Show($"Erreur technique lors de la validation du solde : {ex.Message}", "Échec", MessageBoxButton.OK, MessageBoxImage.Error);
                             }
-
-                            tx.Commit();
-
-                            // 3. Transformation automatique : Génération instantanée de sa FACTURE finale PDF (CA-GFacture-013)
-                            DocumentService.GenererDocumentPDF(idCommande, "FACTURE");
-
-                            MessageBox.Show($"Le règlement a été enregistré. La commande {numeroCmd} est maintenant SOLDÉE. La facture définitive a été émise.", "Règlement Validé", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                            // Rafraîchir les listes
-                            ChargerDonnees(TxtRecherche.Text.Trim());
-                        }
-                        catch (Exception ex)
-                        {
-                            tx.Rollback();
-                            MessageBox.Show($"Erreur technique lors de la validation du solde : {ex.Message}", "Échec", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     }
                 }
+            }
+        }
+        private void BtnImprimer_Click(object sender, RoutedEventArgs e)
+        {
+            // CORRECTION : On récupère le bouton qui a déclenché l'événement
+            if (sender is Button btn)
+            {
+                // CORRECTION : On récupère la ligne sélectionnée (DataContext) de manière dynamique,
+                // sans avoir besoin de nommer GridFactures, DgRecus ou DgFactures.
+                if (btn.DataContext is DataRowView ligneSelectionnee)
+                {
+                    int idCommande = Convert.ToInt32(ligneSelectionnee["id_commande"]);
+
+                    // Récupération sécurisée du type de document et des colonnes de votre base de données
+                    // Note : utilisez "nom_client" ou "nom" selon ce que renvoie votre requête SQL
+                    string nomClient = (ligneSelectionnee.Row.Table.Columns.Contains("nom_client")
+                                        ? ligneSelectionnee["nom_client"]?.ToString()
+                                        : ligneSelectionnee["nom"]?.ToString()) ?? "Client";
+
+                    string statut = ligneSelectionnee["statut_commande"]?.ToString() ?? "";
+                    string typeDoc = (statut == "Terminée" || statut == "Payée") ? "FACTURE" : "REÇU DE DÉPÔT";
+
+                    // 2. OUVRIR LA BOÎTE DE DIALOGUE "ENREGISTRER SOUS"
+                    SaveFileDialog saveFileDialog = new SaveFileDialog();
+                    saveFileDialog.Filter = "Document PDF (*.pdf)|*.pdf";
+                    saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    saveFileDialog.FileName = $"{typeDoc.Replace(" ", "_")}_{idCommande}_{nomClient.Replace(" ", "_")}";
+
+                    if (saveFileDialog.ShowDialog() == true)
+                    {
+                        string cheminChoisi = saveFileDialog.FileName;
+
+                        try
+                        {
+                            // 3. GENERATION ET PREVISUALISATION
+                            DocumentService.GenererDocumentPDF(idCommande, typeDoc, cheminChoisi);
+
+                            // 4. OUVERTURE AUTOMATIQUE POUR VISUALISATION
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(cheminChoisi) { UseShellExecute = true });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Impossible de prévisualiser le PDF : {ex.Message}", "Erreur d'ouverture", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Veuillez sélectionner une ligne pour imprimer le document.", "Sélection manquante", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
