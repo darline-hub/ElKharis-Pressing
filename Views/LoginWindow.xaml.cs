@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using MySql.Data.MySqlClient;
 using ElKharis.Database;
 using BCrypt.Net;
+using ElKharis.Models;
 
 namespace ElKharis.Views
 {

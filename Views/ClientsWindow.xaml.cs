@@ -173,6 +173,21 @@ namespace ElKharis.Views
             }
         }
 
+        private void BtnFactures_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                FacturesWindow factures = new FacturesWindow();
+                factures.Owner = this; // Très important !
+                factures.Show();
+                this.Hide();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre de facturation : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         private void BtnDashboard_Click(object sender, RoutedEventArgs e)
         {
             try

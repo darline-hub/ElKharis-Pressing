@@ -119,14 +119,25 @@ namespace ElKharis.Views
                 // Extraction de la ligne brute (DataRow)
                 DataRow commandeRow = ligneSelectionnee.Row;
 
-                // 3. Instance de la fenêtre de commande en lui passant la ligne de données pour la préremplir
-                NouvelleCommandeWindow modifWindow = new NouvelleCommandeWindow(commandeRow);
-                modifWindow.Owner = this; // Définit la fenêtre parente pour un affichage centré
+                // 3. SÉCURITÉ : Vérification du statut avant d'ouvrir le formulaire
+                string statut = commandeRow["statut_commande"]?.ToString() ?? "";
 
-                // 4. OUVERTURE DU FORMULAIRE DEVANT TOI
+                if (statut.Equals("Livrée", StringComparison.OrdinalIgnoreCase) ||
+                    statut.Equals("Livre", StringComparison.OrdinalIgnoreCase))
+                {
+                    // On affiche le message d'avertissement
+                    MessageBox.Show($"Cette commande est déjà '{statut}'. Elle ne peut plus être modifiée (Règle CA-GCommande-009).",
+                                    "Modification impossible",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning);
+
+                    return; 
+                }
+
+                NouvelleCommandeWindow modifWindow = new NouvelleCommandeWindow(commandeRow);
+                modifWindow.Owner = this; 
                 if (modifWindow.ShowDialog() == true)
                 {
-                    // Si l'utilisateur a enregistré des modifications, on rafraîchit le tableau principal
                     ChargerCommandes();
                 }
             }
@@ -191,11 +202,38 @@ namespace ElKharis.Views
             }
         }
 
+        private void BtnFactures_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                FacturesWindow factures = new FacturesWindow();
+                factures.Owner = this; // Très important !
+                factures.Show();
+                this.Hide();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre de facturation : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void BtnRetourDashboard_Click(object sender, RoutedEventArgs e)
         {
-            DashboardWindow dashboard = new DashboardWindow();
-            dashboard.Show();
-            this.Close();
+            // Si cette fenêtre a été ouverte depuis le Dashboard (Owner existant)
+            if (this.Owner is DashboardWindow dashboard)
+            {
+                dashboard.RafraichirDashboard(); // Optionnel : Recalcule les stats du jour avant d'afficher
+                dashboard.Show();                // Réaffiche la fenêtre cachée
+            }
+            else
+            {
+                // Sécurité au cas où la fenêtre aurait été ouverte directement sans Owner
+                DashboardWindow fallbackDashboard = new DashboardWindow();
+                fallbackDashboard.Show();
+            }
+
+            this.Close(); // Ferme et détruit proprement la fenêtre secondaire devenue inutile
         }
 
         private void BtnQuitter_Click(object sender, RoutedEventArgs e) => this.Close();
@@ -274,6 +312,74 @@ namespace ElKharis.Views
                 }
             }
         }
-        
+
+        private void BtnSuivantStatut_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag != null)
+            {
+                int idCommande = Convert.ToInt32(btn.Tag);
+
+                // 1. Trouver la ligne actuelle dans notre DataTable pour connaître son statut
+                if (btn.DataContext is DataRowView ligneSelectionnee)
+                {
+                    string statutActuel = ligneSelectionnee["statut_commande"]?.ToString() ?? "En attente";
+                    string statutSuivant = "";
+
+                    // Machine à états : définit la suite logique d'un vêtement au pressing
+                    switch (statutActuel)
+                    {
+                        case "Creer":
+                        case "En attente":
+                            statutSuivant = "En traitement";
+                            break;
+                        case "En cours de traitement":
+                        case "En traitement":
+                            statutSuivant = "Prête";
+                            break;
+                        case "Prête":
+                            statutSuivant = "Livrée";
+                            break;
+                        default:
+                            return; // Si déjà livrée ou inconnu, on ne fait rien
+                    }
+
+                    // 2. Demander une petite confirmation pour éviter les erreurs de clic
+                    MessageBoxResult result = MessageBox.Show(
+                        $"Passer la commande du statut '{statutActuel}' à '{statutSuivant}' ?",
+                        "Changement rapide de statut",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question
+                    );
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        try
+                        {
+                            // 3. Mise à jour directe en Base de données
+                            using (MySqlConnection conn = new MySqlConnection(connectionString))
+                            {
+                                conn.Open();
+                                string query = "UPDATE commandes SET statut_commande = @statut WHERE id_commande = @id";
+
+                                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                                {
+                                    cmd.Parameters.AddWithValue("@statut", statutSuivant);
+                                    cmd.Parameters.AddWithValue("@id", idCommande);
+                                    cmd.ExecuteNonQuery();
+                                }
+                            }
+
+                            // 4. Rafraîchir l'affichage et recalculer les compteurs du haut automatiquement !
+                            ChargerCommandes();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Erreur lors du changement de statut : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }

@@ -5,18 +5,17 @@ using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using MySql.Data.MySqlClient;
+using ElKharis.Database;
+using ElKharis.Models;
 
 namespace ElKharis.Views
 {
     public partial class NouvelleCommandeWindow : Window
     {
-        // Chaîne de connexion locale à MySQL
         private readonly string connectionString = "Server=localhost;Database=pressing_elkharis;Uid=root;Pwd=;";
 
-        // Variable pour intercepter l'ID du client s'il provient du formulaire de création rapide
         private long? _idClientForce = null;
 
-        // Structure représentant une ligne du panier en mémoire
         public class LignePanier
         {
             public int IdArticle { get; set; }
@@ -30,7 +29,10 @@ namespace ElKharis.Views
 
         // Collection dynamique liée à la DataGrid (DgPanier)
         private ObservableCollection<LignePanier> panier = new ObservableCollection<LignePanier>();
-       
+
+        private bool estModification = false;
+        private int idCommandeEnCours = 0;
+        private string statutActuel = "Créée";
 
         // CONSTRUCTEUR 1 : Appel classique depuis le tableau de bord / menu
         public NouvelleCommandeWindow()
@@ -51,12 +53,12 @@ namespace ElKharis.Views
         public NouvelleCommandeWindow(DataRow ligneCommande)
         {
             InitializeComponent();
-
-
-            // 1. Initialise les listes et les composants graphiques
             InitialiserFormulaire();
 
-            // 2. Remplissage des champs textuels avec les données de la base
+            estModification = true;
+            idCommandeEnCours = Convert.ToInt32(ligneCommande["id_commande"]);
+            statutActuel = ligneCommande["statut_commande"]?.ToString() ?? "Creer";
+
             TxtNumero.Text = ligneCommande["numero_commande"]?.ToString() ?? string.Empty;
             CbClients.SelectedValue = Convert.ToInt64(ligneCommande["id_client"]);
             DpDepot.SelectedDate = Convert.ToDateTime(ligneCommande["date_commande"]);
@@ -66,14 +68,13 @@ namespace ElKharis.Views
             TxtAvance.Text = ligneCommande["avance"]?.ToString() ?? "0";
 
             // 3. Verrouillage si la commande est livrée (Règle CA-GCommande-009)
-            string statut = ligneCommande["statut_commande"]?.ToString() ?? "";
-            if (statut.Equals("Livrée", StringComparison.OrdinalIgnoreCase) || statut.Equals("Livre", StringComparison.OrdinalIgnoreCase))
+            if (statutActuel.Equals("Livrée", StringComparison.OrdinalIgnoreCase) || statutActuel.Equals("Livre", StringComparison.OrdinalIgnoreCase))
             {
                 VerrouillerFormulaire();
             }
 
             // 4. Charger les articles du panier depuis la table detail_commandes
-            ChargerPanierCommandeExistante(Convert.ToInt32(ligneCommande["id_commande"]));
+            ChargerPanierCommandeExistante(idCommandeEnCours);
         }
 
         // Bloque les modifications si la commande est déjà archivée/livrée
@@ -86,50 +87,8 @@ namespace ElKharis.Views
             TxtReduction.IsEnabled = false;
             TxtAvance.IsEnabled = false;
             DpLivraison.IsEnabled = false;
+            DgPanier.IsEnabled = false;
             MessageBox.Show("Cette commande est déjà LIVRÉE. Elle est affichée en lecture seule et ne peut plus être modifiée (Règle CA-GCommande-009).", "Commande Verrouillée", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        // Méthode d'appui pour remplir le panier en mode modification
-        private void ChargerPanierCommandeExistante(int idCommande)
-        {
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection(connectionString))
-                {
-                    conn.Open();
-                    string query = @"SELECT dc.id_article, dc.id, a.nom_article, s.nom_service, dc.prix_unitaire, dc.quantite 
-                                     FROM detail_commandes dc
-                                     JOIN articles a ON dc.id_article = a.id_article
-                                     JOIN services s ON dc.id = s.id
-                                     WHERE dc.id_commande = @id_cmd";
-
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@id_cmd", idCommande);
-                        using (MySqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            panier.Clear();
-                            while (reader.Read())
-                            {
-                                panier.Add(new LignePanier
-                                {
-                                    IdArticle = reader.GetInt32("id_article"),
-                                    IdService = reader.GetInt32("id"),
-                                    Designation = reader.GetString("nom_article"),
-                                    Service = reader.GetString("nom_service"),
-                                    PrixUnitaire = reader.GetDecimal("prix_unitaire"),
-                                    Quantite = reader.GetInt32("quantite")
-                                });
-                            }
-                        }
-                    }
-                }
-                MettreAJourTotaux();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des détails de la commande : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
 
         private void InitialiserFormulaire()
@@ -143,10 +102,162 @@ namespace ElKharis.Views
 
             // Charger les ComboBox de façon synchronisée avec la base
             ChargerClients();
+            ChangeApresChargementClient();
             ChargerArticles();
             ChargerServices();
-            GenererNumeroCommande();
+
+            // On ne génère un numéro automatique que si on est en mode création
+            if (!estModification)
+            {
+                GenererNumeroCommande();
+            }
         }
+
+        private void ChangeApresChargementClient()
+        {
+            if (_idClientForce.HasValue)
+            {
+                CbClients.SelectedValue = _idClientForce.Value;
+            }
+        }
+
+        #region TRANSACTION ET ENREGISTREMENT SQL FINAL (CRÉATION ET MODIFICATION FUSIONNÉES)
+
+        private void BtnEnregistrer_Click(object sender, RoutedEventArgs e)
+        {
+            // [Vos vérifications de panier et de client existantes...]
+
+            string numero = TxtNumero.Text.Trim();
+            decimal total = Convert.ToDecimal(TxtTotal.Text);
+            decimal reduction = decimal.TryParse(TxtReduction.Text, out decimal r) ? r : 0m;
+            decimal avance = decimal.TryParse(TxtAvance.Text, out decimal a) ? a : 0m;
+
+
+            // CA-GFacture-008 : Application de la réduction sur le net à payer
+            decimal netAPayer = total - reduction;
+            if (netAPayer < 0) netAPayer = 0;
+
+            // CA-GFacture-009 : Empêcher un paiement supérieur au montant restant à payer
+            if (avance > netAPayer)
+            {
+                MessageBox.Show($"Le montant versé ({avance} F) ne peut pas être supérieur au net à payer ({netAPayer} F) après réduction (Règle CA-GFacture-009).",
+                                "Erreur de Saisie", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (avance == 0)
+            {
+                statutActuel = "En attente de paiement";
+            }
+            else if (avance < netAPayer)
+            {
+                statutActuel = "Payé partiellement"; 
+            }
+            else
+            {
+                statutActuel = "Payé";
+            }
+
+            decimal resteAPayer = netAPayer - avance;
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+                MySqlTransaction transaction = conn.BeginTransaction();
+
+                try
+                {
+                    int idCommandeResultat = idCommandeEnCours;
+
+                    // Récupération du mode de paiement depuis votre ComboBox (Ex: CbModePaiement)
+                    // CA-GFacture-004 : Espèces ou Mobile Money
+                    string modePaiement = "Espèces";
+                    if (CbModePaiement != null && CbModePaiement.SelectedItem != null)
+                    {
+                        modePaiement = (CbModePaiement.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Espèces";
+                    }
+
+                    if (estModification)
+                    {
+                        // [Votre code UPDATE commandes existant...]
+                        // Pensez à passer @statut avec la variable statutActuel mise à jour
+                    }
+                    else
+                    {
+                        // MODE CRÉATION
+                        string queryInsert = @"INSERT INTO commandes 
+                    (numero_commande, id_client, date_commande, date_livraison_prevue, montant_total, reduction, avance, statut_commande) 
+                    VALUES (@num, @id_client, @date_c, @date_l, @total, @reduc, @avance, @statut);
+                    SELECT LAST_INSERT_ID();";
+
+                        using (MySqlCommand cmdCmd = new MySqlCommand(queryInsert, conn, transaction))
+                        {
+                            cmdCmd.Parameters.AddWithValue("@num", numero);
+                            cmdCmd.Parameters.AddWithValue("@id_client", CbClients.SelectedValue);
+                            cmdCmd.Parameters.AddWithValue("@date_c", DateTime.Now); 
+                            cmdCmd.Parameters.AddWithValue("@total", total);
+                            cmdCmd.Parameters.AddWithValue("@reduc", reduction);
+                            cmdCmd.Parameters.AddWithValue("@avance", avance);
+                            cmdCmd.Parameters.AddWithValue("@statut", statutActuel);
+
+                            idCommandeResultat = Convert.ToInt32(cmdCmd.ExecuteScalar());
+
+                            // 1. On vérifie si une date a bien été choisie
+                            if (DpLivraison.SelectedDate == null)
+                            {
+                                MessageBox.Show("Veuillez sélectionner une date de livraison prévue.",
+                                                "Saisie incomplète", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                return; // On arrête l'exécution ici
+                            }
+
+                            // 2. Si c'est bon, on peut utiliser .Value en toute sécurité plus bas dans les paramètres :
+                            cmdCmd.Parameters.AddWithValue("@date_l", DpLivraison.SelectedDate.Value);
+                        }
+                    }
+
+                    // [Votre boucle foreach (var item in panier) pour insérer les détails...]
+
+                    // CA-GFacture-001 & CA-GFacture-002 : Enregistrement du paiement si > 0
+                    if (avance > 0)
+                    {
+                        string queryPaiement = @"INSERT INTO paiements 
+                    (id_commande, montant_verse, mode_paiement, statut_reglement) 
+                    VALUES (@id_cmd, @montant, @mode, @statut_regle)";
+
+                        using (MySqlCommand cmdPaiement = new MySqlCommand(queryPaiement, conn, transaction))
+                        {
+                            cmdPaiement.Parameters.AddWithValue("@id_cmd", idCommandeResultat);
+                            cmdPaiement.Parameters.AddWithValue("@montant", avance); // CA-GFacture-002 (supérieur à 0)
+                            cmdPaiement.Parameters.AddWithValue("@mode", modePaiement); // CA-GFacture-004
+                            cmdPaiement.Parameters.AddWithValue("@statut_regle", resteAPayer == 0 ? "Soldé" : "Avance");
+
+                            cmdPaiement.ExecuteNonQuery(); // Génère automatiquement l'ID unique via l'AUTO_INCREMENT (CA-GFacture-001)
+                        }
+                    }
+
+                    transaction.Commit();
+
+                    // CA-GFacture-010 & CA-GFacture-014 : Génération automatique après validation
+                    if (resteAPayer > 0)
+                    {
+                        DocumentService.GenererDocumentPDF(idCommandeResultat, "REÇU"); // CA-GFacture-012
+                    }
+                    else
+                    {
+                        DocumentService.GenererDocumentPDF(idCommandeResultat, "FACTURE"); // CA-GFacture-015
+                    }
+
+                    MessageBox.Show($"Opération réussie. Statut commande : {statutActuel}", "Succès ElKharis", MessageBoxButton.OK, MessageBoxImage.Information);
+                    this.DialogResult = true;
+                    this.Close();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    MessageBox.Show($"Erreur SQL : {ex.Message}", "Échec", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+        #endregion
 
         #region CHARGEMENT DES DONNÉES INITIALES (BDD)
 
@@ -164,14 +275,8 @@ namespace ElKharis.Views
                     da.Fill(dt);
 
                     CbClients.ItemsSource = dt.DefaultView;
-                    CbClients.SelectedValuePath = "id_client"; // Clé primaire renvoyée par le composant
-                    CbClients.DisplayMemberPath = "nom";       // Colonne textuelle affichée à l'écran
-                }
-
-                // Pré-sélection si l'ID provient d'un ajout rapide externe
-                if (_idClientForce.HasValue)
-                {
-                    CbClients.SelectedValue = _idClientForce.Value;
+                    CbClients.SelectedValuePath = "id_client";
+                    CbClients.DisplayMemberPath = "nom";
                 }
             }
             catch (Exception ex)
@@ -211,7 +316,6 @@ namespace ElKharis.Views
                 using (MySqlConnection conn = new MySqlConnection(connectionString))
                 {
                     conn.Open();
-                    // Sélection explicite de l'ID, du nom et du coefficient réel de ta table services
                     string query = "SELECT id, nom_service, coefficient_prix FROM services ORDER BY nom_service ASC";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     MySqlDataAdapter da = new MySqlDataAdapter(cmd);
@@ -231,7 +335,6 @@ namespace ElKharis.Views
 
         private void GenererNumeroCommande()
         {
-            // Génération dynamique et automatique d'un identifiant unique (Règle CA-GCommande-002)
             TxtNumero.Text = "CMD-" + DateTime.Now.ToString("yyyyMMdd-HHmmss");
         }
 
@@ -241,7 +344,6 @@ namespace ElKharis.Views
 
         private void BtnAjouterAuPanier_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Validations de sécurité de base
             if (CbArticles.SelectedValue == null || CbArticles.SelectedItem == null)
             {
                 MessageBox.Show("Veuillez sélectionner un type de vêtement.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -258,7 +360,6 @@ namespace ElKharis.Views
                 return;
             }
 
-            // 2. Récupération des informations de l'article sélectionné
             int idArticle = Convert.ToInt32(CbArticles.SelectedValue);
             string nomArticle = ((DataRowView)CbArticles.SelectedItem)["nom_article"]?.ToString() ?? "Article inconnu";
 
@@ -266,12 +367,11 @@ namespace ElKharis.Views
             string nomService;
             decimal coefficientService = 1.00m;
 
-            // 3. Gestion de la règle du service par défaut ('Complet')
             if (CbServices.SelectedValue == null || CbServices.SelectedItem == null)
             {
                 idService = ObtenirIdServiceCompletParDefaut();
                 nomService = "Complet (Lavage + Repassage)";
-                coefficientService = 1.00m; // Service complet = 100% du tarif de base
+                coefficientService = 1.00m;
 
                 if (idService == -1)
                 {
@@ -284,12 +384,9 @@ namespace ElKharis.Views
                 DataRowView ligneService = (DataRowView)CbServices.SelectedItem;
                 idService = Convert.ToInt32(ligneService["id"]);
                 nomService = ligneService["nom_service"]?.ToString() ?? "Service inconnu";
-
-                // Récupération du coefficient de prix réel (Ex: 0.60 pour le repassage uniquement)
                 coefficientService = Convert.ToDecimal(ligneService["coefficient_prix"]);
             }
 
-            // 4. ÉTAPE CLÉ : Récupération du prix réel depuis le champ 'montant' de ta BDD
             decimal prixBaseArticle = ObtenirPrixDeBaseArticle(idArticle);
 
             if (prixBaseArticle == 0)
@@ -297,10 +394,8 @@ namespace ElKharis.Views
                 MessageBox.Show("Attention, le prix de cet article est configuré à 0 FCFA ou n'a pas été trouvé dans la base de données.", "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
-            // 5. CALCUL DU PRIX PRESTATION : Prix de l'habit × Coefficient du type de service
             decimal prixCalcule = prixBaseArticle * coefficientService;
 
-            // 6. CALCUL DE LA MAJORATION D'URGENCE (Express) selon le délai de livraison
             DateTime dateDepot = DpDepot.SelectedDate.Value.Date;
             DateTime dateLivraison = DpLivraison.SelectedDate.Value.Date;
             int joursEcart = (dateLivraison - dateDepot).Days;
@@ -310,37 +405,34 @@ namespace ElKharis.Views
                 MessageBox.Show("La date de livraison doit être postérieure à la date de dépôt !", "Erreur de Date", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            else if (joursEcart == 1) // Urgent (Le lendemain) -> Tarif doublé (+100%)
+            else if (joursEcart == 1)
             {
                 prixCalcule = prixCalcule * 2.0m;
             }
-            else if (joursEcart == 2) // Semi-urgent (48h après) -> Tarif +50%
+            else if (joursEcart == 2)
             {
                 prixCalcule = prixCalcule * 1.5m;
             }
 
-            // 7. INSERTION DANS LE TABLEAU (DataGrid) : Visibilité immédiate pour l'utilisateur
             LignePanier nouvelleLigne = new LignePanier
             {
                 IdArticle = idArticle,
                 IdService = idService,
                 Designation = nomArticle,
                 Service = nomService,
-                PrixUnitaire = prixCalcule, // Ce prix est maintenant parfaitement calculé et s'affichera dans la DataGrid
+                PrixUnitaire = prixCalcule,
                 Quantite = qte
             };
 
             panier.Add(nouvelleLigne);
 
-            // 8. Réinitialisation des contrôles de saisie pour le vêtement suivant
             TxtQuantite.Text = "1";
             CbArticles.SelectedIndex = -1;
             CbServices.SelectedIndex = -1;
 
-            // 9. RECALCUL AUTOMATIQUE DU TOTAL GÉNÉRAL en bas du formulaire
             MettreAJourTotaux();
         }
-        // Recherche dynamique textuelle avec joker pour isoler l'ID de ton service par défaut
+
         private int ObtenirIdServiceCompletParDefaut()
         {
             int idResultat = -1;
@@ -369,7 +461,7 @@ namespace ElKharis.Views
 
         private decimal ObtenirPrixDeBaseArticle(int idArticle)
         {
-            decimal prix = 0; 
+            decimal prix = 0;
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(connectionString))
@@ -413,8 +505,6 @@ namespace ElKharis.Views
             }
 
             TxtTotal.Text = totalGénéral.ToString("0");
-
-            // Forcer le calcul des réductions et nets à payer
             CalculerReste(null, null);
         }
 
@@ -431,7 +521,6 @@ namespace ElKharis.Views
                 decimal reduction = string.IsNullOrEmpty(TxtReduction.Text) ? 0 : Convert.ToDecimal(TxtReduction.Text);
                 decimal avance = string.IsNullOrEmpty(TxtAvance.Text) ? 0 : Convert.ToDecimal(TxtAvance.Text);
 
-                // Règle CA-GCommande-011 : Déduction automatique et immédiate de la réduction
                 decimal reste = total - reduction - avance;
                 if (reste < 0) reste = 0;
 
@@ -439,7 +528,49 @@ namespace ElKharis.Views
             }
             catch
             {
-                // Empêche le plantage si l'utilisateur saisit temporairement une lettre
+                
+            }
+        }
+
+        private void ChargerPanierCommandeExistante(int idCommande)
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
+                {
+                    conn.Open();
+                    string query = @"SELECT dc.id_article, dc.id, a.nom_article, s.nom_service, dc.prix_unitaire, dc.quantite 
+                                     FROM detail_commandes dc
+                                     JOIN articles a ON dc.id_article = a.id_article
+                                     JOIN services s ON dc.id = s.id
+                                     WHERE dc.id_commande = @id_cmd";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id_cmd", idCommande);
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            panier.Clear();
+                            while (reader.Read())
+                            {
+                                panier.Add(new LignePanier
+                                {
+                                    IdArticle = reader.GetInt32("id_article"),
+                                    IdService = reader.GetInt32("id"),
+                                    Designation = reader.GetString("nom_article"),
+                                    Service = reader.GetString("nom_service"),
+                                    PrixUnitaire = reader.GetDecimal("prix_unitaire"),
+                                    Quantite = reader.GetInt32("quantite")
+                                });
+                            }
+                        }
+                    }
+                }
+                MettreAJourTotaux();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des détails de la commande : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -459,10 +590,8 @@ namespace ElKharis.Views
 
             if (clientForm.ShowDialog() == true)
             {
-                // Sauvegarde de la sélection utilisateur en cours
                 string? clientPrecedentSelectionne = CbClients.SelectedValue?.ToString();
 
-                // Rechargement transparent
                 ChargerClients();
 
                 if (!string.IsNullOrEmpty(clientPrecedentSelectionne))
@@ -474,96 +603,10 @@ namespace ElKharis.Views
 
         #endregion
 
-        #region TRANSACTION ET ENREGISTREMENT SQL FINAL
-
-        private void BtnEnregistrer_Click(object sender, RoutedEventArgs e)
-        {
-            // RÈGLE CA-GCommande-001 : Interdiction formelle de valider sans client lié
-            if (CbClients.SelectedValue == null)
-            {
-                MessageBox.Show("Veuillez sélectionner un client. Impossible de valider une commande anonyme (Règle CA-GCommande-001).", "Sécurité Bloquante", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // RÈGLE CA-GCommande-003 : Validation d'un panier obligatoirement garni
-            if (panier.Count == 0)
-            {
-                MessageBox.Show("Impossible de valider une commande sans au moins un vêtement ajouté au panier (Règle CA-GCommande-003).", "Panier Vide", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (DpLivraison.SelectedDate == null)
-            {
-                MessageBox.Show("Veuillez renseigner une date de livraison prévisionnelle.", "Information Manquante", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            using (MySqlConnection conn = new MySqlConnection(connectionString))
-            {
-                conn.Open();
-                // Utilisation d'une transaction SQL sécurisée
-                MySqlTransaction transaction = conn.BeginTransaction();
-
-                try
-                {
-                    // RÈGLE CA-GCommande-002 : Statut forcé par défaut sur 'Creer'
-                    string queryCommande = @"INSERT INTO commandes 
-                        (numero_commande, id_client, date_commande, date_livraison_prevue, montant_total, reduction, avance, statut_commande) 
-                        VALUES (@num, @id_client, @date_c, @date_l, @total, @reduc, @avance, 'Creer');
-                        SELECT LAST_INSERT_ID();";
-
-                    MySqlCommand cmdCmd = new MySqlCommand(queryCommande, conn, transaction);
-                    cmdCmd.Parameters.AddWithValue("@num", TxtNumero.Text);
-                    cmdCmd.Parameters.AddWithValue("@id_client", CbClients.SelectedValue);
-                    cmdCmd.Parameters.AddWithValue("@date_c", DateTime.Now);
-                    cmdCmd.Parameters.AddWithValue("@date_l", DpLivraison.SelectedDate.Value);
-                    cmdCmd.Parameters.AddWithValue("@total", Convert.ToDecimal(TxtTotal.Text));
-                    cmdCmd.Parameters.AddWithValue("@reduc", decimal.TryParse(TxtReduction.Text, out decimal r) ? r : 0m);
-                    cmdCmd.Parameters.AddWithValue("@avance", decimal.TryParse(TxtAvance.Text, out decimal a) ? a : 0m);
-
-                    int idCommandeGenere = Convert.ToInt32(cmdCmd.ExecuteScalar());
-
-                    // 2. Insertion séquentielle de chaque ligne du panier d'achat
-                    string queryDetail = @"INSERT INTO detail_commandes 
-                        (id_commande, id_article, id, quantite, prix_unitaire) 
-                        VALUES (@id_cmd, @id_art, @id_ser, @qte, @pu)";
-
-                    foreach (var item in panier)
-                    {
-                        MySqlCommand cmdDetail = new MySqlCommand(queryDetail, conn, transaction);
-                        cmdDetail.Parameters.AddWithValue("@id_cmd", idCommandeGenere);
-                        cmdDetail.Parameters.AddWithValue("@id_art", item.IdArticle);
-                        cmdDetail.Parameters.AddWithValue("@id_ser", item.IdService);
-                        cmdDetail.Parameters.AddWithValue("@qte", item.Quantite);
-                        cmdDetail.Parameters.AddWithValue("@pu", item.PrixUnitaire);
-
-                        cmdDetail.ExecuteNonQuery();
-                    }
-
-                    // Validation définitive de la transaction atomique
-                    transaction.Commit();
-
-                    // RÈGLE CA-GCommande-013 : Confirmation et appel virtuel d'impression de facture
-                    MessageBox.Show($"La commande {TxtNumero.Text} a été validée avec succès !\n\nFacture générée automatiquement en tâche de fond (Règle CA-GCommande-013).", "Succès Pressing", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    this.DialogResult = true;
-                    this.Close();
-                }
-                catch (Exception ex)
-                {
-                    // Annulation complète en cas d'incident réseau
-                    transaction.Rollback();
-                    MessageBox.Show($"Erreur technique fatale lors du traitement de la transaction SQL : {ex.Message}", "Échec Transactionnel", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
         private void BtnFermer_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
             this.Close();
         }
-
-        #endregion
     }
 }

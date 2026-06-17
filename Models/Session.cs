@@ -8,7 +8,9 @@ namespace ElKharis.Models
 {
     internal class Session
     {
-        public static string NomUtilisateur { get; set; } = "Utilisateur";
-        public static string Role { get; set; } = "Personnel";
+        public static string NomUtilisateur { get; set; } = "Invité";
+        public static string Role { get; set; } = "Non défini";
+        public static int IdUtilisateur { get; set; } = 0;
+        public static string Email { get; set; } = "Non defini";
     }
 }

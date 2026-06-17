@@ -1,9 +1,11 @@
 ﻿<Window x:Class="ElKharis.Views.ClientsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="El-Kharis - Clients" Height="700" Width="1100"
-        WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="NoResize"
-        Background="#F4F6FA">
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ElKharis.Views"
+        mc:Ignorable="d"
+        Title="El-Kharis - Clients" Height="700" Width="1100">
 
     <Grid Margin="0,0,0,-6">
         <Grid.ColumnDefinitions>
@@ -36,6 +38,7 @@
                     <Border Background="#2B6CB0" CornerRadius="8" Margin="0,5,0,0">
                         <Button Content="👥 Clients" Background="Transparent" Foreground="White" FontWeight="Bold" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0"/>
                     </Border>
+                    <Button  Content="💳 Factures &amp; Reçus" Background="Transparent" Foreground="White" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Click="BtnFactures_Click"/>
                     <Button Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnArticles_Click"/>
                     <Button Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnServices_Click"/>
                 </StackPanel>

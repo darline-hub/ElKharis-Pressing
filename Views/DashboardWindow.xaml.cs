@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using ElKharis.Database;
 using ElKharis.Views;
 using MySql.Data.MySqlClient;
+using ElKharis.Models;
 
 namespace ElKharis.Views
 {
@@ -26,14 +27,22 @@ namespace ElKharis.Views
         public DashboardWindow()
         {
             InitializeComponent();
+            TxtUserNom.Text = Session.NomUtilisateur;
+            TxtUserRole.Text = Session.Role;
+
+            // Centralisation du chargement des données
+            RafraichirDashboard();
+        }
+
+        // Méthode publique pour pouvoir rafraîchir les stats depuis une autre fenêtre si nécessaire
+        public void RafraichirDashboard()
+        {
             ChargerStatistiques();
             ChargerCommandesRecentes();
             ChargerServicesPlusDemandes();
-            TxtUserNom.Text = Session.NomUtilisateur;
-            TxtUserRole.Text = Session.Role;
         }
-        
-        private void ChargerStatistiques()
+
+       private void ChargerStatistiques()
         {
             try
             {
@@ -41,35 +50,76 @@ namespace ElKharis.Views
                 {
                     if (conn == null) return;
 
-                    string qCommandes = "SELECT COUNT(*) FROM commandes WHERE DATE(date_commande) = CURDATE()";
-                    using (MySqlCommand cmd = new MySqlCommand(qCommandes, conn))
-                    {
-                        int nbCommandes = Convert.ToInt32(cmd.ExecuteScalar()!);
-                        TxtCommandesJour.Text = nbCommandes.ToString();
-                    }
+                    // Requête SQL pour récupérer le total par jour sur les 7 derniers jours
+                    string query = @"SELECT 
+                                DATE(date_commande) AS date_brute,
+                                DATE_FORMAT(date_commande, '%a') AS jour_nom,
+                                DATE_FORMAT(date_commande, '%d') AS jour_num,
+                                SUM(montant_total) AS total_jour
+                             FROM commandes
+                             WHERE date_commande >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+                             GROUP BY DATE(date_commande)
+                             ORDER BY DATE(date_commande) ASC";
 
-                    string qChiffre = "SELECT IFNULL(SUM(montant_total), 0) FROM commandes";
-                    using (MySqlCommand cmd = new MySqlCommand(qChiffre, conn))
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        decimal chiffreAffaires = Convert.ToDecimal(cmd.ExecuteScalar()!);
-                        TxtChiffreAffaires.Text = string.Format("{0:N0}", chiffreAffaires).Replace(",", " ");
-                    }
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            var donneesBrutes = new List<dynamic>();
+                            decimal montantMaximum = 0;
 
-                    string qClients = "SELECT COUNT(*) FROM clients";
-                    using (MySqlCommand cmd = new MySqlCommand(qClients, conn))
-                    {
-                        int nbClients = Convert.ToInt32(cmd.ExecuteScalar()!);
-                        TxtClientsActifs.Text = nbClients.ToString();
+                            while (reader.Read())
+                            {
+                                string jourNom = reader["jour_nom"].ToString() ?? "";
+                                string jourNum = reader["jour_num"].ToString() ?? "";
+
+                                // Traduction des jours de MySQL (anglais court) vers le français
+                                jourNom = jourNom.ToLower() switch
+                                {
+                                    "mon" => "Lun.",
+                                    "tue" => "Mar.",
+                                    "wed" => "Mer.",
+                                    "thu" => "Jeu.",
+                                    "fri" => "Ven.",
+                                    "sat" => "Sam.",
+                                    "sun" => "Dim.",
+                                    _ => jourNom
+                                };
+
+                                string affichageJour = $"{jourNom} {jourNum}";
+                                decimal total = Convert.ToDecimal(reader["total_jour"]);
+
+                                if (total > montantMaximum) montantMaximum = total;
+
+                                donneesBrutes.Add(new { JourLibelle = affichageJour, Total = total });
+                            }
+
+                            // Sécurité division par zéro
+                            if (montantMaximum == 0) montantMaximum = 1;
+
+                            // Échelle visuelle (pixels max de la barre)
+                            double hauteurMaxGraphique = 140;
+
+                            // Construction finale de la liste pour le Binding WPF
+                            var donneesGraphique = donneesBrutes.Select(d => new
+                            {
+                                Jour = d.JourLibelle,
+                                MontantFormatte = d.Total > 0 ? string.Format("{0:N0} F", d.Total).Replace(",", " ") : "0 F",
+                                HauteurBarre = (double)(d.Total / montantMaximum) * hauteurMaxGraphique + 5
+                            }).ToList();
+
+                            // Remplissage du graphique
+                            //IcGraphiqueChiffre.ItemsSource = donneesGraphique;
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors du chargement des statistiques : " + ex.Message,
-                                "Erreur de données", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Erreur lors du chargement du graphique sur 7 jours : " + ex.Message,
+                                "Erreur graphique", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void ChargerCommandesRecentes()
         {
             try
@@ -79,14 +129,14 @@ namespace ElKharis.Views
                     if (conn == null) return;
 
                     string query = @"SELECT 
-                                CONCAT(cl.nom, ' ', IFNULL(cl.prenom, '')) AS nom_client,
-                                DATE_FORMAT(c.date_commande, '%H:%i') AS heure_commande,
-                                c.statut_commande,
-                                CONCAT(FORMAT(c.montant_total, 0), ' FCFA') AS montant_formatte
-                             FROM commandes c
-                             INNER JOIN clients cl ON c.id_client = cl.id_client
-                             ORDER BY c.date_commande DESC
-                             LIMIT 8";
+                                        CONCAT(cl.nom, ' ', IFNULL(cl.prenom, '')) AS nom_client,
+                                        DATE_FORMAT(c.date_commande, '%H:%i') AS heure_commande,
+                                        c.statut_commande,
+                                        CONCAT(FORMAT(c.montant_total, 0), ' FCFA') AS montant_formatte
+                                     FROM commandes c
+                                     INNER JOIN clients cl ON c.id_client = cl.id_client
+                                     ORDER BY c.date_commande DESC
+                                     LIMIT 8";
 
                     MySqlDataAdapter da = new MySqlDataAdapter(query, conn);
                     System.Data.DataTable dt = new System.Data.DataTable();
@@ -110,15 +160,14 @@ namespace ElKharis.Views
                 {
                     if (conn == null) return;
 
-                    // CORRECTION : Remplacement de s.id_service par s.id
                     string query = @"SELECT 
-                                s.nom_service, 
-                                COUNT(dc.id) AS total_demandes
-                             FROM detail_commandes dc
-                             INNER JOIN services s ON dc.id = s.id
-                             GROUP BY s.id, s.nom_service
-                             ORDER BY total_demandes DESC
-                             LIMIT 3";
+                                        s.nom_service, 
+                                        COUNT(dc.id) AS total_demandes
+                                     FROM detail_commandes dc
+                                     INNER JOIN services s ON dc.id = s.id
+                                     GROUP BY s.id, s.nom_service
+                                     ORDER BY total_demandes DESC
+                                     LIMIT 3";
 
                     MySqlDataAdapter da = new MySqlDataAdapter(query, conn);
                     System.Data.DataTable dt = new System.Data.DataTable();
@@ -145,46 +194,50 @@ namespace ElKharis.Views
             }
         }
 
+        // ==========================================
+        //        NAVIGATION OPTIMISÉE (SUITE)
+        // ==========================================
+
         private void BtnClients_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 ClientsWindow cltWin = new ClientsWindow();
+                cltWin.Owner = this; // Démarre la relation Parent -> Enfant
                 cltWin.Show();
-                this.Close();
-
+                this.Hide(); // Cache simplement le dashboard sans le détruire
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des clients : {ex.Message}",
                                 "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            
         }
+
         private void BtnArticles_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 ArticlesWindow articles = new ArticlesWindow();
+                articles.Owner = this;
                 articles.Show();
-                this.Close();
-
+                this.Hide();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des articles : {ex.Message}",
                                 "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
         }
+
         private void BtnServices_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 ServicesWindow services = new ServicesWindow();
+                services.Owner = this;
                 services.Show();
-                this.Close();
-
+                this.Hide();
             }
             catch (Exception ex)
             {
@@ -192,13 +245,15 @@ namespace ElKharis.Views
                                 "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private void BtnCommandes_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                CommandesWindow fenetreCommandes = new ElKharis.Views.CommandesWindow();
+                CommandesWindow fenetreCommandes = new CommandesWindow();
+                fenetreCommandes.Owner = this; // Très important !
                 fenetreCommandes.Show();
-                this.Close();
+                this.Hide();
             }
             catch (Exception ex)
             {
@@ -207,16 +262,42 @@ namespace ElKharis.Views
             }
         }
 
+        private void BtnFactures_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                FacturesWindow factures = new FacturesWindow();
+                factures.Owner = this; // Très important !
+                factures.Show();
+                this.Hide();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre d : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            LoginWindow login = new LoginWindow();
-            login.Show();
-            this.Close(); 
+            MessageBoxResult result = MessageBox.Show("Êtes-vous sûr de vouloir vous déconnecter ?", "Déconnexion", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                LoginWindow login = new LoginWindow();
+                login.Show();
+                this.Close(); // Ici le Close est normal car on quitte l'application vers le login
+            }
         }
 
         private void BtnQuitter_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        private void BtnMenuFacturation_Click(object sender, RoutedEventArgs e)
+        {
+            FacturesWindow facWindow = new FacturesWindow();
+            facWindow.ShowDialog();
         }
     }
 }

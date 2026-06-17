@@ -1,0 +1,154 @@
+﻿<Window x:Class="ElKharis.Views.FacturesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ElKharis.Views"
+        mc:Ignorable="d"
+        Title="El-Kharis - Factures" Height="700" Width="1100">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Colonne 0 : Le Sidebar (Largeur fixe) -->
+            <ColumnDefinition Width="260"/>
+            <!-- Colonne 1 : Le Contenu Principal (Prend tout le reste) -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Background="#1A365D" BorderThickness="0,0,1,0" BorderBrush="#E2E8F0" Margin="0,0,10,0">
+            <Grid Margin="10,20,10,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="1" Margin="0,0,10,0">
+                    <Image Source="/Resources/logo.jpeg" Height="80" Width="130" HorizontalAlignment="Center" Margin="0,0,0,-5" Stretch="Uniform"/>
+                    <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+
+                    <Border Background="#2B6CB0" CornerRadius="8" Padding="1" Margin="0,5,0,10">
+                        <StackPanel HorizontalAlignment="Center" Margin="5">
+                            <TextBlock x:Name="TxtUserNom" Text="Nom de l'utilisateur" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="TxtUserRole" Text="Rôle" Foreground="#CBD5E0" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Content="📊 Tableau de bord" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnDashboard_Click"/>
+                    <Button Content="🧺 Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnCommandes_Click"/>
+                    <Button Content="👥 Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnClients_Click"/>
+                    <Button Style="{StaticResource ActiveMenuButtonStyle}" Content="💳 Factures &amp; Reçus"/>
+                    <Button Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
+                    <Button Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Row="2" Content="Déconnexion" Background="#E53E3E" Foreground="White" FontWeight="Bold" FontSize="14" Height="40" Margin="15,0,15,0" Cursor="Hand" BorderThickness="0" Click="BtnLogout_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </Border>
+        <Grid Grid.Column="1" Margin="25">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,10,0,15">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Paiements &amp; Facturation" FontSize="26" FontWeight="Bold" Foreground="#2D3748"/>
+                    <TextBlock Text="Consultez l'historique des reçus, éditez les factures et encaissez les restes à payer." FontSize="13" Foreground="#718096"/>
+                </StackPanel>
+                <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#A0AEC0" FontWeight="Bold" FontSize="18" Cursor="Hand" Click="BtnQuitter_Click"/>
+            </Grid>
+
+            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#E2E8F0" BorderThickness="1">
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="Rechercher (Client ou N°)" FontWeight="Medium" Foreground="#4A5568" Margin="0,0,0,5"/>
+                        <TextBox x:Name="TxtRecherche" Width="300" Height="32" VerticalContentAlignment="Center" Padding="5" TextChanged="TxtRecherche_TextChanged"/>
+                    </StackPanel>
+
+                    <Button x:Name="BtnActualiser" Content="Actualiser la liste" Background="#2B6CB0" Foreground="White" FontWeight="SemiBold" Width="140" Height="32" Margin="0,18,0,0" Click="BtnActualiser_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <TabControl Grid.Row="2" Background="Transparent" BorderThickness="0">
+                <TabItem Header="Reçus de Dépôt (En cours)" FontSize="14" FontWeight="SemiBold" Padding="15,6">
+                    <Grid Background="White" Margin="-8,1,-2,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="306*"/>
+                            <ColumnDefinition Width="55*"/>
+                            <ColumnDefinition Width="435*"/>
+                        </Grid.ColumnDefinitions>
+                        <DataGrid x:Name="DgRecus" Grid.Row="0" AutoGenerateColumns="False" IsReadOnly="True" Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EDF2F7" RowHeight="48" FontSize="13.5" Foreground="#2D3748" AlternatingRowBackground="#F8FAFC" Grid.ColumnSpan="3">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="N° Commande" Binding="{Binding numero_commande}" Width="120"/>
+                                <DataGridTextColumn Header="Client" Binding="{Binding nom_client}" Width="110"/>
+                                <DataGridTextColumn Header="Date Dépôt" Binding="{Binding date_commande, StringFormat=\{0:dd/MM/yyyy\}}" Width="90"/>
+                                <DataGridTextColumn Header="Total Net" Binding="{Binding net_a_payer, StringFormat=\{0:N0\} F}" Width="80"/>
+                                <DataGridTextColumn Header="Avance Versée" Binding="{Binding avance, StringFormat=\{0:N0\} F}" Width="100"/>
+                                <DataGridTemplateColumn Header="Reste à Payer" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding reste_a_payer, StringFormat=\{0:N0\} F}" Foreground="#E53E3E" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Statut" Binding="{Binding statut_commande}" Width="100"/>
+                                <DataGridTemplateColumn Header="Actions" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="👁️" ToolTip="reçu PDF" Background="Transparent" Foreground="#3182CE" Padding="6,2" Margin="2" Click="BtnVoirPDF_Click"/>
+                                                <Button Content="💵" Foreground="#38A169" ToolTip="Encaisser Paiement" Background="Transparent" Padding="6,2" Margin="2" Click="BtnEncaisserSolde_Click"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Factures Clôturées (Payées)" FontSize="14" FontWeight="SemiBold" Padding="15,6">
+                    <Grid Background="White" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="51*"/>
+                            <ColumnDefinition Width="211*"/>
+                        </Grid.ColumnDefinitions>
+                        <DataGrid x:Name="DgFactures" Grid.Row="0" AutoGenerateColumns="False" IsReadOnly="True" Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EDF2F7" RowHeight="48" FontSize="13.5" Foreground="#2D3748" AlternatingRowBackground="#F8FAFC" Grid.ColumnSpan="2">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="N° Facture" Binding="{Binding numero_commande}" Width="1.2*"/>
+                                <DataGridTextColumn Header="Client" Binding="{Binding nom_client}" Width="1.8*"/>
+                                <DataGridTextColumn Header="Date Paiement" Binding="{Binding date_commande, StringFormat=\{0:dd/MM/yyyy\}}" Width="1.2*"/>
+                                <DataGridTextColumn Header="Montant Total" Binding="{Binding montant_total, StringFormat=\{0:N0\} F}" Width="1.2*"/>
+                                <DataGridTextColumn Header="Réduction" Binding="{Binding reduction, StringFormat=\{0:N0\} F}" Width="1*"/>
+                                <DataGridTextColumn Header="Statut" Binding="{Binding statut_commande}" Width="1.2*"/>
+                                <DataGridTemplateColumn Header="Actions" Width="1.5*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="📥 Facture PDF" ToolTip="Ouvrir Facture PDF" Background="Transparent" Foreground="#4F46E5" Padding="10,2" Margin="2" Click="BtnVoirPDF_Click"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+
+    </Grid>
+</Window>

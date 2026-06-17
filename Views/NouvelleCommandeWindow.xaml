@@ -117,6 +117,12 @@
                     <TextBlock Text="Date de livraison prévue" FontWeight="SemiBold" Margin="0,0,0,3" Foreground="#4A5568"/>
                     <DatePicker x:Name="DpLivraison" Height="35" Margin="0,0,0,12" VerticalContentAlignment="Center"/>
 
+                    <TextBlock Text="Mode de règlement" FontWeight="SemiBold" Margin="0,0,0,3" Foreground="#4A5568"/>
+                    <ComboBox x:Name="CbModePaiement" SelectedIndex="0" Height="30" Margin="0,0,0,10">
+                        <ComboBoxItem Content="Espèces"/>
+                        <ComboBoxItem Content="Mobile Money"/>
+                    </ComboBox>
+
                     <Border Background="#F7FAFC" Padding="12" CornerRadius="10" BorderThickness="1" BorderBrush="#E2E8F0">
                         <StackPanel>
                             <Grid Margin="0,0,0,8">
@@ -159,7 +165,7 @@
                     </Button.Resources>
                 </Button>
 
-                <Button Content="💾 Enregistrer &amp; Imprimer le Reçu" Width="250" Height="38" Background="#00A3C4" Foreground="White" 
+                <Button Content="💾 Enregistrer" Width="250" Height="38" Background="#00A3C4" Foreground="White" 
                         FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnEnregistrer_Click">
                     <Button.Resources>
                         <Style TargetType="Border">
