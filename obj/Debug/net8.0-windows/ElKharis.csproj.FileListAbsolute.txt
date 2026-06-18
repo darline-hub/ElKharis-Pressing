@@ -57,3 +57,5 @@ C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\refint
 C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\ElKharis.pdb
 C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\ElKharis.genruntimeconfig.cache
 C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\ref\ElKharis.dll
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\bin\Debug\net8.0-windows\LiveCharts.dll
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\bin\Debug\net8.0-windows\LiveCharts.Wpf.dll

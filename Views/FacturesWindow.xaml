@@ -23,7 +23,8 @@
 
                 <StackPanel Grid.Row="1" Margin="0,0,10,0">
                     <Image Source="/Resources/logo.jpeg" Height="80" Width="130" HorizontalAlignment="Center" Margin="0,0,0,-5" Stretch="Uniform"/>
-                    <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,0"/>
+                    <TextBlock Text="L'excellence au service de votre éclat" Foreground="#CBD5E0" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,0,0,0" TextWrapping="Wrap" TextAlignment="Center"/>
 
                     <Border Background="#2B6CB0" CornerRadius="8" Padding="1" Margin="0,5,0,10">
                         <StackPanel HorizontalAlignment="Center" Margin="5">
@@ -36,8 +37,8 @@
                     <Button Content="🧺 Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnCommandes_Click"/>
                     <Button Content="👥 Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnClients_Click"/>
                     <Button Style="{StaticResource ActiveMenuButtonStyle}" Content="💳 Factures &amp; Reçus"/>
-                    <Button Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
-                    <Button Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
+                    <Button x:Name="BtnArticles" Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
+                    <Button x:Name="BtnServices" Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
                 </StackPanel>
 
                 <Button Grid.Row="2" Content="Déconnexion" Background="#E53E3E" Foreground="White" FontWeight="Bold" FontSize="14" Height="40" Margin="15,0,15,0" Cursor="Hand" BorderThickness="0" Click="BtnLogout_Click">
@@ -58,7 +59,7 @@
 
             <Grid Grid.Row="0" Margin="0,10,0,15">
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Paiements &amp; Facturation" FontSize="26" FontWeight="Bold" Foreground="#2D3748"/>
+                    <TextBlock Text="Factures &amp; Reçus" FontSize="26" FontWeight="Bold" Foreground="#2D3748"/>
                     <TextBlock Text="Consultez l'historique des reçus, éditez les factures et encaissez les restes à payer." FontSize="13" Foreground="#718096"/>
                 </StackPanel>
                 <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#A0AEC0" FontWeight="Bold" FontSize="18" Cursor="Hand" Click="BtnQuitter_Click"/>
@@ -92,7 +93,7 @@
                         <DataGrid x:Name="DgRecus" Grid.Row="0" AutoGenerateColumns="False" IsReadOnly="True" Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EDF2F7" RowHeight="48" FontSize="13.5" Foreground="#2D3748" AlternatingRowBackground="#F8FAFC" Grid.ColumnSpan="3">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="N° Commande" Binding="{Binding numero_commande}" Width="120"/>
-                                <DataGridTextColumn Header="Client" Binding="{Binding nom_client}" Width="110"/>
+                                <DataGridTextColumn Header="Client" Binding="{Binding nom}" Width="110"/>
                                 <DataGridTextColumn Header="Date Dépôt" Binding="{Binding date_commande, StringFormat=\{0:dd/MM/yyyy\}}" Width="90"/>
                                 <DataGridTextColumn Header="Total Net" Binding="{Binding net_a_payer, StringFormat=\{0:N0\} F}" Width="80"/>
                                 <DataGridTextColumn Header="Avance Versée" Binding="{Binding avance, StringFormat=\{0:N0\} F}" Width="100"/>
@@ -108,8 +109,8 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="👁️" ToolTip="reçu PDF" Background="Transparent" Foreground="#3182CE" Padding="6,2" Margin="2" Click="BtnVoirPDF_Click"/>
-                                                <Button Content="💵" Foreground="#38A169" ToolTip="Encaisser Paiement" Background="Transparent" Padding="6,2" Margin="2" Click="BtnEncaisserSolde_Click"/>
+                                                <Button Content="👁️" ToolTip="reçu PDF" Background="Transparent" Foreground="#3182CE" BorderThickness="0" Cursor="Hand" FontSize="14" Margin="0,0,12,0" Click="BtnVoirPDF_Click"/>
+                                                <Button Content="💵" Foreground="#38A169" ToolTip="Encaisser Paiement" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="14" Margin="0,0,12,0" Click="BtnEncaisserSolde_Click"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -127,17 +128,17 @@
                         </Grid.ColumnDefinitions>
                         <DataGrid x:Name="DgFactures" Grid.Row="0" AutoGenerateColumns="False" IsReadOnly="True" Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EDF2F7" RowHeight="48" FontSize="13.5" Foreground="#2D3748" AlternatingRowBackground="#F8FAFC" Grid.ColumnSpan="2">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="N° Facture" Binding="{Binding numero_commande}" Width="1.2*"/>
-                                <DataGridTextColumn Header="Client" Binding="{Binding nom_client}" Width="1.8*"/>
+                                <DataGridTextColumn Header="N° Facture" Binding="{Binding numero_commande}" Width="120"/>
+                                <DataGridTextColumn Header="Client" Binding="{Binding nom}" Width="1.8*"/>
                                 <DataGridTextColumn Header="Date Paiement" Binding="{Binding date_commande, StringFormat=\{0:dd/MM/yyyy\}}" Width="1.2*"/>
                                 <DataGridTextColumn Header="Montant Total" Binding="{Binding montant_total, StringFormat=\{0:N0\} F}" Width="1.2*"/>
                                 <DataGridTextColumn Header="Réduction" Binding="{Binding reduction, StringFormat=\{0:N0\} F}" Width="1*"/>
                                 <DataGridTextColumn Header="Statut" Binding="{Binding statut_commande}" Width="1.2*"/>
-                                <DataGridTemplateColumn Header="Actions" Width="1.5*">
+                                <DataGridTemplateColumn Header="Actions" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="📥 Facture PDF" ToolTip="Ouvrir Facture PDF" Background="Transparent" Foreground="#4F46E5" Padding="10,2" Margin="2" Click="BtnVoirPDF_Click"/>
+                                                <Button Content="📥" ToolTip="Ouvrir Facture PDF" Background="Transparent" Foreground="#4F46E5"  Margin="0,0,12,0"  BorderThickness="0" Cursor="Hand" Click="BtnVoirPDF_Click"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

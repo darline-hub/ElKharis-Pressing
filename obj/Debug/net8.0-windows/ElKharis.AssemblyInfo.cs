@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ElKharis")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b91afe815426e0080bdbfef8018b4abfccc60a30")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+beb050e4fec3e0f40f51d2621021d464403126c6")]
 [assembly: System.Reflection.AssemblyProductAttribute("ElKharis")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ElKharis")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

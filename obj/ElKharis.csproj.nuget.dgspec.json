@@ -57,6 +57,10 @@
               "target": "Package",
               "version": "[4.2.0, )"
             },
+            "LiveCharts.Wpf": {
+              "target": "Package",
+              "version": "[0.9.7, )"
+            },
             "MySql.Data": {
               "target": "Package",
               "version": "[9.7.0, )"

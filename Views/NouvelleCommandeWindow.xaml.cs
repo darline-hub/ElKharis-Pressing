@@ -13,7 +13,6 @@ namespace ElKharis.Views
     public partial class NouvelleCommandeWindow : Window
     {
         private readonly string connectionString = "Server=localhost;Database=pressing_elkharis;Uid=root;Pwd=;";
-
         private long? _idClientForce = null;
 
         public class LignePanier
@@ -27,21 +26,17 @@ namespace ElKharis.Views
             public decimal TotalLigne => PrixUnitaire * Quantite;
         }
 
-        // Collection dynamique liée à la DataGrid (DgPanier)
         private ObservableCollection<LignePanier> panier = new ObservableCollection<LignePanier>();
-
         private bool estModification = false;
         private int idCommandeEnCours = 0;
         private string statutActuel = "Créée";
 
-        // CONSTRUCTEUR 1 : Appel classique depuis le tableau de bord / menu
         public NouvelleCommandeWindow()
         {
             InitializeComponent();
             InitialiserFormulaire();
         }
 
-        // CONSTRUCTEUR 2 : Appel automatique après création d'un nouveau client
         public NouvelleCommandeWindow(long idClient)
         {
             InitializeComponent();
@@ -49,7 +44,6 @@ namespace ElKharis.Views
             InitialiserFormulaire();
         }
 
-        // CONSTRUCTEUR 3 : Appel pour charger une commande existante (Mode Consultation/Modification)
         public NouvelleCommandeWindow(DataRow ligneCommande)
         {
             InitializeComponent();
@@ -67,17 +61,14 @@ namespace ElKharis.Views
             TxtReduction.Text = ligneCommande["reduction"]?.ToString() ?? "0";
             TxtAvance.Text = ligneCommande["avance"]?.ToString() ?? "0";
 
-            // 3. Verrouillage si la commande est livrée (Règle CA-GCommande-009)
             if (statutActuel.Equals("Livrée", StringComparison.OrdinalIgnoreCase) || statutActuel.Equals("Livre", StringComparison.OrdinalIgnoreCase))
             {
                 VerrouillerFormulaire();
             }
 
-            // 4. Charger les articles du panier depuis la table detail_commandes
             ChargerPanierCommandeExistante(idCommandeEnCours);
         }
 
-        // Bloque les modifications si la commande est déjà archivée/livrée
         private void VerrouillerFormulaire()
         {
             CbClients.IsEnabled = false;
@@ -88,25 +79,25 @@ namespace ElKharis.Views
             TxtAvance.IsEnabled = false;
             DpLivraison.IsEnabled = false;
             DgPanier.IsEnabled = false;
-            MessageBox.Show("Cette commande est déjà LIVRÉE. Elle est affichée en lecture seule et ne peut plus être modifiée (Règle CA-GCommande-009).", "Commande Verrouillée", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Cette commande est déjà LIVRÉE. Elle est en lecture seule (Règle CA-GCommande-009).", "Verrouillée", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void InitialiserFormulaire()
         {
-            // Liaison de la liste en mémoire (panier) à la DataGrid visuelle
             DgPanier.ItemsSource = panier;
 
-            // RÈGLE MÉTIER : Dépôt = Aujourd'hui, Livraison Prévue = 3 jours de délai standard
+            // Liaison des événements de changement de date pour le calcul automatique en temps réel
+            DpDepot.SelectedDateChanged += DatePicker_SelectedDateChanged;
+            DpLivraison.SelectedDateChanged += DatePicker_SelectedDateChanged;
+
             DpDepot.SelectedDate = DateTime.Today;
             DpLivraison.SelectedDate = DateTime.Today.AddDays(3);
 
-            // Charger les ComboBox de façon synchronisée avec la base
             ChargerClients();
             ChangeApresChargementClient();
             ChargerArticles();
             ChargerServices();
 
-            // On ne génère un numéro automatique que si on est en mode création
             if (!estModification)
             {
                 GenererNumeroCommande();
@@ -121,276 +112,216 @@ namespace ElKharis.Views
             }
         }
 
-        #region TRANSACTION ET ENREGISTREMENT SQL FINAL (CRÉATION ET MODIFICATION FUSIONNÉES)
+        // ÉVÉNEMENT : Dès que la date change, on recalcule TOUT le panier automatiquement à la volée !
+        private void DatePicker_SelectedDateChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (DpDepot.SelectedDate == null || DpLivraison.SelectedDate == null || panier.Count == 0) return;
 
+            DateTime dateDepot = DpDepot.SelectedDate.Value.Date;
+            DateTime dateLivraison = DpLivraison.SelectedDate.Value.Date;
+            int joursEcart = (dateLivraison - dateDepot).Days;
+
+            if (joursEcart <= 0) return;
+
+            // On met à jour chaque ligne selon le nouvel écart de dates
+            for (int i = 0; i < panier.Count; i++)
+            {
+                decimal prixBase = ObtenirPrixDeBaseArticle(panier[i].IdArticle);
+                decimal coeff = ObtenirCoefficientService(panier[i].IdService);
+                decimal nouveauPrix = prixBase * coeff;
+
+                if (joursEcart == 1)
+                {
+                    nouveauPrix *= 2.0m;
+                }
+                else if (joursEcart == 2)
+                {
+                    nouveauPrix *= 1.5m;
+                }
+
+                panier[i].PrixUnitaire = nouveauPrix;
+            }
+
+            // Rafraîchir l'affichage du tableau WPF et recalculer les totaux globaux
+            DgPanier.Items.Refresh();
+            MettreAJourTotaux();
+        }
+
+        #region ENREGISTREMENT SQL
         private void BtnEnregistrer_Click(object sender, RoutedEventArgs e)
         {
-            // [Vos vérifications de panier et de client existantes...]
+            if (CbClients.SelectedValue == null || CbClients.SelectedItem == null)
+            {
+                MessageBox.Show("Veuillez sélectionner un client avant d'enregistrer.", "Saisie incomplète", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (panier.Count == 0)
+            {
+                MessageBox.Show("Le panier est vide.", "Panier vide", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (DpLivraison.SelectedDate == null)
+            {
+                MessageBox.Show("Veuillez sélectionner une date de livraison.", "Saisie incomplète", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             string numero = TxtNumero.Text.Trim();
             decimal total = Convert.ToDecimal(TxtTotal.Text);
             decimal reduction = decimal.TryParse(TxtReduction.Text, out decimal r) ? r : 0m;
             decimal avance = decimal.TryParse(TxtAvance.Text, out decimal a) ? a : 0m;
 
-
-            // CA-GFacture-008 : Application de la réduction sur le net à payer
             decimal netAPayer = total - reduction;
             if (netAPayer < 0) netAPayer = 0;
 
-            // CA-GFacture-009 : Empêcher un paiement supérieur au montant restant à payer
             if (avance > netAPayer)
             {
-                MessageBox.Show($"Le montant versé ({avance} F) ne peut pas être supérieur au net à payer ({netAPayer} F) après réduction (Règle CA-GFacture-009).",
-                                "Erreur de Saisie", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Le montant versé ne peut pas être supérieur au net à payer.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (avance == 0)
-            {
-                statutActuel = "En attente de paiement";
-            }
-            else if (avance < netAPayer)
-            {
-                statutActuel = "Payé partiellement"; 
-            }
-            else
-            {
-                statutActuel = "Payé";
-            }
+
+            if (avance == 0) statutActuel = "En attente de paiement";
+            else if (avance < netAPayer) statutActuel = "Payé partiellement";
+            else statutActuel = "Payé";
 
             decimal resteAPayer = netAPayer - avance;
+            string nomClient = ((DataRowView)CbClients.SelectedItem)["nom"]?.ToString() ?? "Le client";
 
             using (MySqlConnection conn = new MySqlConnection(connectionString))
             {
-                conn.Open();
-                MySqlTransaction transaction = conn.BeginTransaction();
-
                 try
                 {
-                    int idCommandeResultat = idCommandeEnCours;
+                    conn.Open();
+                    MySqlTransaction transaction = conn.BeginTransaction();
 
-                    // Récupération du mode de paiement depuis votre ComboBox (Ex: CbModePaiement)
-                    // CA-GFacture-004 : Espèces ou Mobile Money
-                    string modePaiement = "Espèces";
-                    if (CbModePaiement != null && CbModePaiement.SelectedItem != null)
+                    try
                     {
-                        modePaiement = (CbModePaiement.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Espèces";
-                    }
-
-                    if (estModification)
-                    {
-                        // [Votre code UPDATE commandes existant...]
-                        // Pensez à passer @statut avec la variable statutActuel mise à jour
-                    }
-                    else
-                    {
-                        // MODE CRÉATION
-                        string queryInsert = @"INSERT INTO commandes 
-                    (numero_commande, id_client, date_commande, date_livraison_prevue, montant_total, reduction, avance, statut_commande) 
-                    VALUES (@num, @id_client, @date_c, @date_l, @total, @reduc, @avance, @statut);
-                    SELECT LAST_INSERT_ID();";
-
-                        using (MySqlCommand cmdCmd = new MySqlCommand(queryInsert, conn, transaction))
+                        int idCommandeResultat = idCommandeEnCours;
+                        string modePaiement = "Espèces";
+                        if (CbModePaiement != null && CbModePaiement.SelectedItem != null)
                         {
-                            cmdCmd.Parameters.AddWithValue("@num", numero);
-                            cmdCmd.Parameters.AddWithValue("@id_client", CbClients.SelectedValue);
-                            cmdCmd.Parameters.AddWithValue("@date_c", DateTime.Now);
-                            cmdCmd.Parameters.AddWithValue("@total", total);
-                            cmdCmd.Parameters.AddWithValue("@reduc", reduction);
-                            cmdCmd.Parameters.AddWithValue("@avance", avance);
-                            cmdCmd.Parameters.AddWithValue("@statut", statutActuel);
+                            modePaiement = (CbModePaiement.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Espèces";
+                        }
 
-                            idCommandeResultat = Convert.ToInt32(cmdCmd.ExecuteScalar());
+                        if (estModification)
+                        {
+                            string queryUpdate = @"UPDATE commandes 
+                                                   SET id_client = @id_client, date_livraison_prevue = @date_l, 
+                                                       montant_total = @total, reduction = @reduc, avance = @avance, 
+                                                       statut_commande = @statut 
+                                                   WHERE id_commande = @id_cmd";
 
-                            // 1. On vérifie si une date a bien été choisie
-                            if (DpLivraison.SelectedDate == null)
+                            using (MySqlCommand cmdCmd = new MySqlCommand(queryUpdate, conn, transaction))
                             {
-                                MessageBox.Show("Veuillez sélectionner une date de livraison prévue.",
-                                                "Saisie incomplète", MessageBoxButton.OK, MessageBoxImage.Warning);
-                                return; // On arrête l'exécution ici
+                                cmdCmd.Parameters.AddWithValue("@id_client", CbClients.SelectedValue);
+                                cmdCmd.Parameters.AddWithValue("@date_l", DpLivraison.SelectedDate.Value);
+                                cmdCmd.Parameters.AddWithValue("@total", total);
+                                cmdCmd.Parameters.AddWithValue("@reduc", reduction);
+                                cmdCmd.Parameters.AddWithValue("@avance", avance);
+                                cmdCmd.Parameters.AddWithValue("@statut", statutActuel);
+                                cmdCmd.Parameters.AddWithValue("@id_cmd", idCommandeEnCours);
+                                cmdCmd.ExecuteNonQuery();
                             }
 
-                            // 2. Si c'est bon, on peut utiliser .Value en toute sécurité plus bas dans les paramètres :
-                            cmdCmd.Parameters.AddWithValue("@date_l", DpLivraison.SelectedDate.Value);
-                        }
-                    }
-
-                    // [Votre boucle foreach (var item in panier) pour insérer les détails...]
-
-                    // CA-GFacture-001 & CA-GFacture-002 : Enregistrement du paiement si > 0
-                    if (avance > 0)
-                    {
-                        string queryPaiement = @"INSERT INTO paiements 
-                    (id_commande, montant_verse, mode_paiement, statut_reglement) 
-                    VALUES (@id_cmd, @montant, @mode, @statut_regle)";
-
-                        using (MySqlCommand cmdPaiement = new MySqlCommand(queryPaiement, conn, transaction))
-                        {
-                            cmdPaiement.Parameters.AddWithValue("@id_cmd", idCommandeResultat);
-                            cmdPaiement.Parameters.AddWithValue("@montant", avance); // CA-GFacture-002 (supérieur à 0)
-                            cmdPaiement.Parameters.AddWithValue("@mode", modePaiement); // CA-GFacture-004
-                            cmdPaiement.Parameters.AddWithValue("@statut_regle", resteAPayer == 0 ? "Soldé" : "Avance");
-
-                            cmdPaiement.ExecuteNonQuery(); // Génère automatiquement l'ID unique via l'AUTO_INCREMENT (CA-GFacture-001)
-                        }
-                    }
-
-                    transaction.Commit();
-
-                    // 1. Déclarer la variable pour stocker le chemin du fichier
-                    string cheminChoisi = "";
-
-                    // 2. Récupérer le nom du client depuis votre formulaire pour nommer proprement le fichier
-                    // (Exemple : TxtNomClient.Text ou la variable que vous utilisez dans votre fenêtre)
-                    string nomClientPourFichier = "Client";
-                    if (this.DataContext is DataRowView drv)
-                    {
-                        nomClientPourFichier = drv["nom"]?.ToString() ?? "Client";
-                    }
-
-                    // 3. Déterminer le type de document par défaut pour la boîte de dialogue
-                    string typeDocumentInitial = (resteAPayer > 0) ? "REÇU_DE_DÉPÔT" : "FACTURE";
-
-                    // 4. Ouvrir la boîte de dialogue "Enregistrer sous"
-                    Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
-                    saveFileDialog.Filter = "Document PDF (*.pdf)|*.pdf";
-                    saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                    saveFileDialog.FileName = $"{typeDocumentInitial}_{idCommandeResultat}_{nomClientPourFichier.Replace(" ", "_")}";
-
-                    if (saveFileDialog.ShowDialog() == true)
-                    {
-                        // On affecte la valeur choisie par l'utilisateur à la variable
-                        cheminChoisi = saveFileDialog.FileName;
-
-                        try
-                        {
-                            // 5. Votre bloc If/Else mis à jour avec les 3 paramètres requis
-                            if (resteAPayer > 0)
+                            string queryDeleteDetails = "DELETE FROM detail_commandes WHERE id_commande = @id_cmd";
+                            using (MySqlCommand cmdDel = new MySqlCommand(queryDeleteDetails, conn, transaction))
                             {
-                                ElKharis.Services.DocumentService.GenererDocumentPDF(idCommandeResultat, "REÇU DE DÉPÔT", cheminChoisi);
+                                cmdDel.Parameters.AddWithValue("@id_cmd", idCommandeEnCours);
+                                cmdDel.ExecuteNonQuery();
                             }
-                            else
-                            {
-                                ElKharis.Services.DocumentService.GenererDocumentPDF(idCommandeResultat, "FACTURE", cheminChoisi);
-                            }
-
-                            // 6. Ouvrir instantanément le PDF pour prévisualisation et impression
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(cheminChoisi)
-                            {
-                                UseShellExecute = true
-                            });
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            MessageBox.Show($"Erreur lors de la création ou de l'ouverture du PDF : {ex.Message}", "Erreur PDF", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
+                            string queryInsert = @"INSERT INTO commandes 
+                            (numero_commande, id_client, date_commande, date_livraison_prevue, montant_total, reduction, avance, statut_commande) 
+                            VALUES (@num, @id_client, @date_c, @date_l, @total, @reduc, @avance, @statut);
+                            SELECT LAST_INSERT_ID();";
 
-                }catch (Exception ex)
+                            using (MySqlCommand cmdCmd = new MySqlCommand(queryInsert, conn, transaction))
+                            {
+                                cmdCmd.Parameters.AddWithValue("@num", numero);
+                                cmdCmd.Parameters.AddWithValue("@id_client", CbClients.SelectedValue);
+                                cmdCmd.Parameters.AddWithValue("@date_c", DateTime.Now);
+                                cmdCmd.Parameters.AddWithValue("@date_l", DpLivraison.SelectedDate.Value);
+                                cmdCmd.Parameters.AddWithValue("@total", total);
+                                cmdCmd.Parameters.AddWithValue("@reduc", reduction);
+                                cmdCmd.Parameters.AddWithValue("@avance", avance);
+                                cmdCmd.Parameters.AddWithValue("@statut", statutActuel);
+
+                                idCommandeResultat = Convert.ToInt32(cmdCmd.ExecuteScalar());
+                            }
+                        }
+
+                        string queryDetails = @"INSERT INTO detail_commandes (id_commande, id_article, id, prix_unitaire, quantite) 
+                                                VALUES (@id_cmd, @id_art, @id_srv, @prix, @qte)";
+
+                        foreach (var item in panier)
+                        {
+                            using (MySqlCommand cmdDetails = new MySqlCommand(queryDetails, conn, transaction))
+                            {
+                                cmdDetails.Parameters.AddWithValue("@id_cmd", idCommandeResultat);
+                                cmdDetails.Parameters.AddWithValue("@id_art", item.IdArticle);
+                                cmdDetails.Parameters.AddWithValue("@id_srv", item.IdService);
+                                cmdDetails.Parameters.AddWithValue("@prix", item.PrixUnitaire);
+                                cmdDetails.Parameters.AddWithValue("@qte", item.Quantite);
+                                cmdDetails.ExecuteNonQuery();
+                            }
+                        }
+
+                        if (avance > 0)
+                        {
+                            string queryPaiement = @"INSERT INTO paiements 
+                            (id_commande, montant_verse, mode_paiement, statut_reglement) 
+                            VALUES (@id_cmd, @montant, @mode, @statut_regle)";
+
+                            using (MySqlCommand cmdPaiement = new MySqlCommand(queryPaiement, conn, transaction))
+                            {
+                                cmdPaiement.Parameters.AddWithValue("@id_cmd", idCommandeResultat);
+                                cmdPaiement.Parameters.AddWithValue("@montant", avance);
+                                cmdPaiement.Parameters.AddWithValue("@mode", modePaiement);
+                                cmdPaiement.Parameters.AddWithValue("@statut_regle", resteAPayer == 0 ? "Soldé" : "Avance");
+                                cmdPaiement.ExecuteNonQuery();
+                            }
+                        }
+
+                        transaction.Commit();
+
+                        // NOUVEAU FLUX : Message de confirmation clair puis retour automatique à la liste
+                        MessageBox.Show($"La commande de {nomClient} a été enregistrée avec succès !", "Enregistrement réussi", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        this.DialogResult = true;
+                        this.Close(); // Ferme et actualise la liste principale
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        MessageBox.Show($"Erreur SQL : {ex.Message}");
+                    }
+                }
+                catch (Exception ex)
                 {
-                    MessageBox.Show($"Une erreur est survenue : {ex.Message}");
+                    MessageBox.Show($"Connexion impossible : {ex.Message}");
                 }
             }
         }
         #endregion
 
-        #region CHARGEMENT DES DONNÉES INITIALES (BDD)
-
-        private void ChargerClients()
-        {
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection(connectionString))
-                {
-                    conn.Open();
-                    string query = "SELECT id_client, nom FROM clients ORDER BY nom ASC";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    MySqlDataAdapter da = new MySqlDataAdapter(cmd);
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-
-                    CbClients.ItemsSource = dt.DefaultView;
-                    CbClients.SelectedValuePath = "id_client";
-                    CbClients.DisplayMemberPath = "nom";
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des clients : {ex.Message}", "Erreur SQL", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void ChargerArticles()
-        {
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection(connectionString))
-                {
-                    conn.Open();
-                    string query = "SELECT id_article, nom_article FROM articles ORDER BY nom_article ASC";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    MySqlDataAdapter da = new MySqlDataAdapter(cmd);
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-
-                    CbArticles.ItemsSource = dt.DefaultView;
-                    CbArticles.SelectedValuePath = "id_article";
-                    CbArticles.DisplayMemberPath = "nom_article";
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des articles : {ex.Message}", "Erreur SQL", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void ChargerServices()
-        {
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection(connectionString))
-                {
-                    conn.Open();
-                    string query = "SELECT id, nom_service, coefficient_prix FROM services ORDER BY nom_service ASC";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    MySqlDataAdapter da = new MySqlDataAdapter(cmd);
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-
-                    CbServices.ItemsSource = dt.DefaultView;
-                    CbServices.SelectedValuePath = "id";
-                    CbServices.DisplayMemberPath = "nom_service";
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des services : {ex.Message}", "Erreur SQL", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void GenererNumeroCommande()
-        {
-            TxtNumero.Text = "CMD-" + DateTime.Now.ToString("yyyyMMdd-HHmmss");
-        }
-
-        #endregion
-
-        #region GESTION DU PANIER (AJOUT / SUPPRESSION ET CALCULS DYNAMIQUES)
-
+        #region COULOIR AJOUT PANIER ET AUXILIAIRES
         private void BtnAjouterAuPanier_Click(object sender, RoutedEventArgs e)
         {
             if (CbArticles.SelectedValue == null || CbArticles.SelectedItem == null)
             {
-                MessageBox.Show("Veuillez sélectionner un type de vêtement.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Veuillez sélectionner un vêtement.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (!int.TryParse(TxtQuantite.Text, out int qte) || qte <= 0)
             {
-                MessageBox.Show("Veuillez saisir une quantité valide supérieure à 0.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Quantité invalide.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (DpDepot.SelectedDate == null || DpLivraison.SelectedDate == null)
             {
-                MessageBox.Show("Les dates de dépôt et de livraison doivent être renseignées pour calculer le tarif.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Dates manquantes.", "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -406,12 +337,7 @@ namespace ElKharis.Views
                 idService = ObtenirIdServiceCompletParDefaut();
                 nomService = "Complet (Lavage + Repassage)";
                 coefficientService = 1.00m;
-
-                if (idService == -1)
-                {
-                    MessageBox.Show("Le service par défaut 'Complet' est introuvable dans votre table SQL.", "Erreur Configuration", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                if (idService == -1) return;
             }
             else
             {
@@ -422,12 +348,6 @@ namespace ElKharis.Views
             }
 
             decimal prixBaseArticle = ObtenirPrixDeBaseArticle(idArticle);
-
-            if (prixBaseArticle == 0)
-            {
-                MessageBox.Show("Attention, le prix de cet article est configuré à 0 FCFA ou n'a pas été trouvé dans la base de données.", "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
             decimal prixCalcule = prixBaseArticle * coefficientService;
 
             DateTime dateDepot = DpDepot.SelectedDate.Value.Date;
@@ -436,19 +356,19 @@ namespace ElKharis.Views
 
             if (joursEcart <= 0)
             {
-                MessageBox.Show("La date de livraison doit être postérieure à la date de dépôt !", "Erreur de Date", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("La date de livraison doit être postérieure à la date de dépôt !", "Erreur Date", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             else if (joursEcart == 1)
             {
-                prixCalcule = prixCalcule * 2.0m;
+                prixCalcule *= 2.0m;
             }
             else if (joursEcart == 2)
             {
-                prixCalcule = prixCalcule * 1.5m;
+                prixCalcule *= 1.5m;
             }
 
-            LignePanier nouvelleLigne = new LignePanier
+            panier.Add(new LignePanier
             {
                 IdArticle = idArticle,
                 IdService = idService,
@@ -456,9 +376,7 @@ namespace ElKharis.Views
                 Service = nomService,
                 PrixUnitaire = prixCalcule,
                 Quantite = qte
-            };
-
-            panier.Add(nouvelleLigne);
+            });
 
             TxtQuantite.Text = "1";
             CbArticles.SelectedIndex = -1;
@@ -467,103 +385,140 @@ namespace ElKharis.Views
             MettreAJourTotaux();
         }
 
-        private int ObtenirIdServiceCompletParDefaut()
+        private decimal ObtenirCoefficientService(int idService)
         {
-            int idResultat = -1;
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(connectionString))
                 {
                     conn.Open();
-                    string query = "SELECT id FROM services WHERE nom_service LIKE '%Complet%' LIMIT 1";
+                    string query = "SELECT coefficient_prix FROM services WHERE id = @id";
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        object? res = cmd.ExecuteScalar();
-                        if (res != null && res != DBNull.Value)
-                        {
-                            idResultat = Convert.ToInt32(res);
-                        }
+                        cmd.Parameters.AddWithValue("@id", idService);
+                        return Convert.ToDecimal(cmd.ExecuteScalar() ?? 1.0m);
                     }
                 }
             }
-            catch
+            catch { return 1.0m; }
+        }
+
+        private void ChargerClients()
+        {
+            try
             {
-                idResultat = -1;
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
+                {
+                    conn.Open();
+                    MySqlDataAdapter da = new MySqlDataAdapter("SELECT id_client, nom FROM clients ORDER BY nom ASC", conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    CbClients.ItemsSource = dt.DefaultView;
+                    CbClients.SelectedValuePath = "id_client";
+                    CbClients.DisplayMemberPath = "nom";
+                }
             }
-            return idResultat;
+            catch (Exception ex) { MessageBox.Show($"Erreur clients: {ex.Message}"); }
+        }
+
+        private void ChargerArticles()
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
+                {
+                    conn.Open();
+                    MySqlDataAdapter da = new MySqlDataAdapter("SELECT id_article, nom_article FROM articles ORDER BY nom_article ASC", conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    CbArticles.ItemsSource = dt.DefaultView;
+                    CbArticles.SelectedValuePath = "id_article";
+                    CbArticles.DisplayMemberPath = "nom_article";
+                }
+            }
+            catch (Exception ex) { MessageBox.Show($"Erreur articles: {ex.Message}"); }
+        }
+
+        private void ChargerServices()
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
+                {
+                    conn.Open();
+                    MySqlDataAdapter da = new MySqlDataAdapter("SELECT id, nom_service, coefficient_prix FROM services ORDER BY nom_service ASC", conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    CbServices.ItemsSource = dt.DefaultView;
+                    CbServices.SelectedValuePath = "id";
+                    CbServices.DisplayMemberPath = "nom_service";
+                }
+            }
+            catch (Exception ex) { MessageBox.Show($"Erreur services: {ex.Message}"); }
+        }
+
+        private void GenererNumeroCommande() { TxtNumero.Text = "CMD-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"); }
+
+        private int ObtenirIdServiceCompletParDefaut()
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(connectionString))
+                {
+                    conn.Open();
+                    object? res = new MySqlCommand("SELECT id FROM services WHERE nom_service LIKE '%Complet%' LIMIT 1", conn).ExecuteScalar();
+                    return res != null ? Convert.ToInt32(res) : -1;
+                }
+            }
+            catch { return -1; }
         }
 
         private decimal ObtenirPrixDeBaseArticle(int idArticle)
         {
-            decimal prix = 0;
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(connectionString))
                 {
                     conn.Open();
-                    string query = "SELECT montant FROM articles WHERE id_article = @id_article";
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    using (MySqlCommand cmd = new MySqlCommand("SELECT montant FROM articles WHERE id_article = @id", conn))
                     {
-                        cmd.Parameters.AddWithValue("@id_article", idArticle);
-                        object? result = cmd.ExecuteScalar();
-                        if (result != null && result != DBNull.Value)
-                        {
-                            prix = Convert.ToDecimal(result);
-                        }
+                        cmd.Parameters.AddWithValue("@id", idArticle);
+                        return Convert.ToDecimal(cmd.ExecuteScalar() ?? 0);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors de la récupération du prix de l'article : {ex.Message}", "Erreur BDD", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            return prix;
+            catch { return 0; }
         }
 
         private void BtnSupprimerLignePanier_Click(object sender, RoutedEventArgs e)
         {
-            Button btn = (Button)sender;
-            if (btn.DataContext is LignePanier ligneARetirer)
+            if (((Button)sender).DataContext is LignePanier line)
             {
-                panier.Remove(ligneARetirer);
+                panier.Remove(line);
                 MettreAJourTotaux();
             }
         }
 
         private void MettreAJourTotaux()
         {
-            decimal totalGénéral = 0;
-            foreach (var item in panier)
-            {
-                totalGénéral += item.TotalLigne;
-            }
-
-            TxtTotal.Text = totalGénéral.ToString("0");
+            decimal total = 0;
+            foreach (var item in panier) total += item.TotalLigne;
+            TxtTotal.Text = total.ToString("0");
             CalculerReste(null, null);
         }
 
         private void CalculerReste(object? sender, TextChangedEventArgs? e)
         {
-            if (TxtTotal == null || TxtReduction == null || TxtAvance == null || TxtReste == null)
-            {
-                return;
-            }
-
+            if (TxtTotal == null || TxtReduction == null || TxtAvance == null || TxtReste == null) return;
             try
             {
                 decimal total = string.IsNullOrEmpty(TxtTotal.Text) ? 0 : Convert.ToDecimal(TxtTotal.Text);
                 decimal reduction = string.IsNullOrEmpty(TxtReduction.Text) ? 0 : Convert.ToDecimal(TxtReduction.Text);
                 decimal avance = string.IsNullOrEmpty(TxtAvance.Text) ? 0 : Convert.ToDecimal(TxtAvance.Text);
-
                 decimal reste = total - reduction - avance;
-                if (reste < 0) reste = 0;
-
-                TxtReste.Text = reste.ToString("0");
+                TxtReste.Text = (reste < 0 ? 0 : reste).ToString("0");
             }
-            catch
-            {
-                
-            }
+            catch { }
         }
 
         private void ChargerPanierCommandeExistante(int idCommande)
@@ -582,19 +537,19 @@ namespace ElKharis.Views
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@id_cmd", idCommande);
-                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        using (MySqlDataReader rdr = cmd.ExecuteReader())
                         {
                             panier.Clear();
-                            while (reader.Read())
+                            while (rdr.Read())
                             {
                                 panier.Add(new LignePanier
                                 {
-                                    IdArticle = reader.GetInt32("id_article"),
-                                    IdService = reader.GetInt32("id"),
-                                    Designation = reader.GetString("nom_article"),
-                                    Service = reader.GetString("nom_service"),
-                                    PrixUnitaire = reader.GetDecimal("prix_unitaire"),
-                                    Quantite = reader.GetInt32("quantite")
+                                    IdArticle = rdr.GetInt32("id_article"),
+                                    IdService = rdr.GetInt32("id"),
+                                    Designation = rdr.GetString("nom_article"),
+                                    Service = rdr.GetString("nom_service"),
+                                    PrixUnitaire = rdr.GetDecimal("prix_unitaire"),
+                                    Quantite = rdr.GetInt32("quantite")
                                 });
                             }
                         }
@@ -602,45 +557,21 @@ namespace ElKharis.Views
                 }
                 MettreAJourTotaux();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des détails de la commande : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show($"Erreur détails: {ex.Message}"); }
         }
-
-        #endregion
-
-        #region COULOIR DE CRÉATION RAPIDE DE CLIENT
 
         private void BtnAjouterClientRapide_Click(object sender, RoutedEventArgs e)
         {
-            NouveauClientWindow clientForm = new NouveauClientWindow();
-            clientForm.Owner = this;
-
-            if (clientForm.ChkOuvrirCommande != null)
-            {
-                clientForm.ChkOuvrirCommande.Visibility = Visibility.Collapsed;
-            }
-
-            if (clientForm.ShowDialog() == true)
-            {
-                string? clientPrecedentSelectionne = CbClients.SelectedValue?.ToString();
-
-                ChargerClients();
-
-                if (!string.IsNullOrEmpty(clientPrecedentSelectionne))
-                {
-                    CbClients.SelectedValue = Convert.ToInt64(clientPrecedentSelectionne);
-                }
-            }
+            NouveauClientWindow cf = new NouveauClientWindow { Owner = this };
+            if (cf.ChkOuvrirCommande != null) cf.ChkOuvrirCommande.Visibility = Visibility.Collapsed;
+            if (cf.ShowDialog() == true) ChargerClients();
         }
-
-        #endregion
 
         private void BtnFermer_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
             this.Close();
         }
+        #endregion
     }
 }

@@ -36,7 +36,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <ComboBox x:Name="CbClients" Grid.Column="0" Height="35" VerticalContentAlignment="Center" 
-                                  DisplayMemberPath="nom_client" SelectedValuePath="id_client"/>
+                                  DisplayMemberPath="nom" SelectedValuePath="id_client"/>
                         <Button x:Name="BtnAjouterClientRapide" Grid.Column="1" Content="➕ Nouveau" Width="95" Height="35" Margin="5,0,0,0"
                                 Background="#28A745" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="BtnAjouterClientRapide_Click">
                             <Button.Resources>

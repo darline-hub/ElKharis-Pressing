@@ -32,6 +32,18 @@ namespace ElKharis.Views
             ChargerTousLesClients();
             TxtUserNom.Text = Session.NomUtilisateur;
             TxtUserRole.Text = Session.Role;
+            AppliquerRestrictionsDroits();
+        }
+
+        private void AppliquerRestrictionsDroits()
+        {
+            if (Session.Role == "Réceptionniste")
+            {
+                BtnServices.Visibility = Visibility.Collapsed;
+                BtnArticles.Visibility = Visibility.Collapsed;
+                // BtnUtilisateurs.Visibility = Visibility.Collapsed;
+            }
+            // Si c'est l'Administrateur, ils restent visibles par défaut (Visibility.Visible)
         }
 
         private void ChargerTousLesClients()
@@ -42,64 +54,73 @@ namespace ElKharis.Views
                 {
                     conn.Open();
 
-                    // Requête SQL intelligente : elle compte les commandes et détermine le statut de fidélité
+                    // Requête optimisée avec IFNULL et les nouveaux paliers de fidélité
                     string query = @"
                 SELECT 
                     c.id_client, 
                     c.nom, 
                     c.prenom, 
-                    c.sexe, 
                     c.telephone, 
                     c.email, 
-                    c.ville, 
-                    c.quartier, 
-                    c.date_inscription,
-                    COUNT(co.id_commande) AS nb_commandes,
+                    c.ville,
+                    c.quartier,
+                    IFNULL(SUM(co.montant_total), 0) AS chiffre_affaire,
                     CASE 
-                        WHEN COUNT(co.id_commande) BETWEEN 0 AND 5 THEN 'Nouveau'
-                        WHEN COUNT(co.id_commande) BETWEEN 6 AND 15 THEN 'Fidèle'
-                        ELSE 'VIP'
+                        WHEN IFNULL(SUM(co.montant_total), 0) >= 100000 THEN 'Fidèle'
+                        ELSE 'Nouveau'
                     END AS fidelite
                 FROM clients c
                 LEFT JOIN commandes co ON c.id_client = co.id_client
-                GROUP BY c.id_client
-                ORDER BY c.id_client ASC";
+                GROUP BY c.id_client, c.nom, c.prenom, c.telephone, c.email, c.ville, c.quartier
+                ORDER BY chiffre_affaire DESC";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         using (MySqlDataAdapter da = new MySqlDataAdapter(cmd))
                         {
-                            DataTable dtClients = new DataTable();
+                            dtClients.Clear();
                             da.Fill(dtClients);
-
-                            // Liaison des données à ton DataGrid des clients
-                            DgClients.ItemsSource = dtClients.DefaultView;
                         }
                     }
+
+                    // Liaison des données au DataGrid
+                    DgClients.ItemsSource = dtClients.DefaultView;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des clients : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors du chargement des clients : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void TxtRecherche_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // Sécurité pour éviter le crash au chargement du composant
+            // 1. SÉCURITÉ : Si la table de données n'est pas encore chargée, on arrête tout pour éviter le crash
             if (dtClients == null || dtClients.DefaultView == null || TxtRecherche == null)
                 return;
 
-            // Protection basique contre les injections de guillemets dans le filtre
+            // 2. Nettoyage du texte saisi (gestion des apostrophes pour éviter les erreurs SQL)
             string filtre = TxtRecherche.Text.Replace("'", "''").Trim();
 
-            if (string.IsNullOrEmpty(filtre))
+            try
             {
-                dtClients.DefaultView.RowFilter = string.Empty;
+                if (string.IsNullOrEmpty(filtre))
+                {
+                    // Si la barre est vide, on réaffiche tout
+                    dtClients.DefaultView.RowFilter = string.Empty;
+                }
+                else
+                {
+                    // 3. CORRECTION DU FILTRE : On vérifie bien les vrais noms de colonnes de ta table 'clients'
+                    // D'après ton fichier SQL, les colonnes sont 'nom' et 'prenom'
+                    dtClients.DefaultView.RowFilter = $"nom LIKE '%{filtre}%' OR prenom LIKE '%{filtre}%' OR telephone LIKE '%{filtre}%'";
+                }
             }
-            else
+            catch (Exception ex)
             {
-                dtClients.DefaultView.RowFilter = $"nom LIKE '%{filtre}%' OR prenom LIKE '%{filtre}%' OR telephone LIKE '%{filtre}%'";
+                // Au lieu de crasher et de fermer la fenêtre, l'application affichera calmement l'erreur
+                MessageBox.Show($"Erreur lors de la recherche : {ex.Message}", "Recherche", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

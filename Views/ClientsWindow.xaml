@@ -24,7 +24,8 @@
 
                 <StackPanel Grid.Row="1" Margin="0,0,10,0">
                     <Image Source="/Resources/logo.jpeg" Height="80" Width="130" HorizontalAlignment="Center" Margin="0,0,0,-5" Stretch="Uniform"/>
-                    <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,0"/>
+                    <TextBlock Text="L'excellence au service de votre éclat" Foreground="#CBD5E0" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,0,0,0" TextWrapping="Wrap" TextAlignment="Center"/>
 
                     <Border Background="#2B6CB0" CornerRadius="8" Padding="1" Margin="0,5,0,10">
                         <StackPanel HorizontalAlignment="Center" Margin="5">
@@ -38,9 +39,9 @@
                     <Border Background="#2B6CB0" CornerRadius="8" Margin="0,5,0,0">
                         <Button Content="👥 Clients" Background="Transparent" Foreground="White" FontWeight="Bold" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0"/>
                     </Border>
-                    <Button  Content="💳 Factures &amp; Reçus" Background="Transparent" Foreground="White" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Click="BtnFactures_Click"/>
-                    <Button Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnArticles_Click"/>
-                    <Button Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnServices_Click"/>
+                    <Button Content="💳 Factures &amp; Reçus" Background="Transparent" Foreground="White" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Click="BtnFactures_Click"/>
+                    <Button x:Name="BtnArticles" Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnArticles_Click"/>
+                    <Button x:Name="BtnServices" Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnServices_Click"/>
                 </StackPanel>
 
                 <Button Grid.Row="2" Content="Déconnexion" Background="#E53E3E" Foreground="White" FontWeight="Bold" FontSize="14" Height="40" Margin="15,0,15,0" Cursor="Hand" BorderThickness="0" Click="BtnLogout_Click">

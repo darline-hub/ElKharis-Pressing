@@ -20,7 +20,121 @@ namespace ElKharis.Views
             TxtUserNom.Text = Session.NomUtilisateur;
             TxtUserRole.Text = Session.Role;
             ChargerCommandes();
+            AppliquerRestrictionsDroits();
         }
+
+        private void AppliquerRestrictionsDroits()
+        {
+            if (Session.Role == "Réceptionniste")
+            {
+                BtnServices.Visibility = Visibility.Collapsed;
+                BtnArticles.Visibility = Visibility.Collapsed;
+                // BtnUtilisateurs.Visibility = Visibility.Collapsed;
+            }
+            // Si c'est l'Administrateur, ils restent visibles par défaut (Visibility.Visible)
+        }
+
+
+        private void CalculerStatistiques()
+        {
+            if (dtCommandes == null) return;
+
+            int total = dtCommandes.Rows.Count;
+            int enAttente = 0;
+            int enCours = 0;
+            int pretes = 0;
+
+            foreach (DataRow row in dtCommandes.Rows)
+            {
+                // On transforme en minuscules et on nettoie les espaces pour éviter les surprises
+                string statut = (Convert.ToString(row["statut_commande"]) ?? "").Trim().ToLower();
+
+                if (statut == "en attente" || statut == "creer" || statut == "créer" || statut == "créée")
+                    enAttente++;
+                else if (statut == "en cours de traitement" || statut == "en traitement")
+                    enCours++;
+                else if (statut == "prête" || statut == "prete")
+                    pretes++;
+            }
+
+            TxtStatTotal.Text = total.ToString();
+            TxtStatEnAttente.Text = enAttente.ToString();
+            TxtStatEnCours.Text = enCours.ToString();
+            TxtStatPretes.Text = pretes.ToString();
+
+            TxtPaginationInfo.Text = $"Affichage de {total} commande(s) enregistrée(s)";
+        }
+
+        private void BtnSuivantStatut_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag != null)
+            {
+                int idCommande = Convert.ToInt32(btn.Tag);
+
+                if (btn.DataContext is DataRowView ligneSelectionnee)
+                {
+                    // On récupère le statut proprement en minuscules
+                    string statutActuel = (Convert.ToString(ligneSelectionnee["statut_commande"]) ?? "en attente").Trim().ToLower();
+                    string statutSuivant = "";
+
+                    // Machine à états tolérante aux variantes d'écriture
+                    switch (statutActuel)
+                    {
+                        case "creer":
+                        case "créer":
+                        case "créée":
+                        case "en attente":
+                            statutSuivant = "En traitement";
+                            break;
+                        case "en cours de traitement":
+                        case "en traitement":
+                            statutSuivant = "Prête";
+                            break;
+                        case "prête":
+                        case "prete":
+                            statutSuivant = "Livrée";
+                            break;
+                        default:
+                            statutSuivant = "En traitement";
+                            break;
+                    }
+
+                    MessageBoxResult result = MessageBox.Show(
+                        $"Passer la commande au statut '{statutSuivant}' ?",
+                        "Changement rapide de statut",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question
+                    );
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        try
+                        {
+                            using (MySqlConnection conn = new MySqlConnection(connectionString))
+                            {
+                                conn.Open();
+                                string query = "UPDATE commandes SET statut_commande = @statut WHERE id_commande = @id";
+
+                                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                                {
+                                    cmd.Parameters.AddWithValue("@statut", statutSuivant);
+                                    cmd.Parameters.AddWithValue("@id", idCommande);
+                                    cmd.ExecuteNonQuery();
+                                }
+                            }
+                            // Recharger le tableau et recalculer les compteurs du haut
+                            ChargerCommandes();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Erreur lors du changement de statut : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+            }
+        }
+
+
 
         private void ChargerCommandes()
         {
@@ -30,11 +144,14 @@ namespace ElKharis.Views
                 {
                     conn.Open();
 
-                    // Sélection des colonnes qui correspondent exactement à tes Bindings XAML
-                    string query = @"SELECT id_commande, numero_commande, id_client, date_commande, statut_commande,
-                                    date_livraison_prevue, montant_total, reduction, avance, statut_commande, reste_a_payer 
-                             FROM commandes 
-                             ORDER BY date_commande DESC";
+                    // CORRECTION : Ajout de la jointure INNER JOIN et de la fusion Nom + Prénom avec CONCAT
+                    string query = @"SELECT c.id_commande, c.numero_commande, c.id_client, c.date_commande, 
+                                    c.date_livraison_prevue, c.montant_total, c.reduction, c.avance, 
+                                    c.statut_commande, c.reste_a_payer,
+                                    CONCAT(cl.nom, ' ', IFNULL(cl.prenom, '')) AS nom_complet
+                             FROM commandes c
+                             INNER JOIN clients cl ON c.id_client = cl.id_client
+                             ORDER BY c.date_commande DESC";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
@@ -57,44 +174,11 @@ namespace ElKharis.Views
             }
         }
 
-        private void CalculerStatistiques()
-        {
-            if (dtCommandes == null) return;
-
-            int total = dtCommandes.Rows.Count;
-            int enAttente = 0;
-            int enCours = 0;
-            int pretes = 0;
-
-            foreach (DataRow row in dtCommandes.Rows)
-            {
-                string statut = row["statut_commande"]?.ToString() ?? "";
-
-                if (statut == "En attente" || statut == "Creer") // Ajout du statut initial
-                    enAttente++;
-                else if (statut == "En cours de traitement" || statut == "En traitement")
-                    enCours++;
-                else if (statut == "Prête")
-                    pretes++;
-            }
-
-            // Injection des valeurs calculées dans les TextBlocks du XAML
-            TxtStatTotal.Text = total.ToString();
-            TxtStatEnAttente.Text = enAttente.ToString();
-            TxtStatEnCours.Text = enCours.ToString();
-            TxtStatPretes.Text = pretes.ToString();
-
-            // Mise à jour de la barre d'information en bas
-            TxtPaginationInfo.Text = $"Affichage de {total} commande(s) enregistrée(s)";
-        }
-
         private void TxtRecherche_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // Sécurité pour éviter le crash au chargement du composant
             if (dtCommandes == null || dtCommandes.DefaultView == null || TxtRecherche == null)
                 return;
 
-            // Protection basique contre les injections de guillemets dans le filtre
             string filtre = TxtRecherche.Text.Replace("'", "''").Trim();
 
             if (string.IsNullOrEmpty(filtre))
@@ -103,7 +187,8 @@ namespace ElKharis.Views
             }
             else
             {
-                dtCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR id_client LIKE '%{filtre}%'";
+                // CORRECTION : On filtre maintenant sur 'nom_complet' (le texte) et non plus sur l'ID numérique !
+                dtCommandes.DefaultView.RowFilter = $"numero_commande LIKE '%{filtre}%' OR nom_complet LIKE '%{filtre}%'";
             }
             TxtPaginationInfo.Text = $"Affichage de {DgCommandes.Items.Count} commande(s) correspondante(s)";
         }
@@ -224,8 +309,8 @@ namespace ElKharis.Views
             // Si cette fenêtre a été ouverte depuis le Dashboard (Owner existant)
             if (this.Owner is DashboardWindow dashboard)
             {
-                dashboard.RafraichirDashboard(); // Optionnel : Recalcule les stats du jour avant d'afficher
-                dashboard.Show();                // Réaffiche la fenêtre cachée
+                dashboard.RafraichirDashboard();
+                dashboard.Show();                
             }
             else
             {
@@ -314,73 +399,7 @@ namespace ElKharis.Views
             }
         }
 
-        private void BtnSuivantStatut_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag != null)
-            {
-                int idCommande = Convert.ToInt32(btn.Tag);
-
-                // 1. Trouver la ligne actuelle dans notre DataTable pour connaître son statut
-                if (btn.DataContext is DataRowView ligneSelectionnee)
-                {
-                    string statutActuel = ligneSelectionnee["statut_commande"]?.ToString() ?? "En attente";
-                    string statutSuivant = "";
-
-                    // Machine à états : définit la suite logique d'un vêtement au pressing
-                    switch (statutActuel)
-                    {
-                        case "Creer":
-                        case "En attente":
-                            statutSuivant = "En traitement";
-                            break;
-                        case "En cours de traitement":
-                        case "En traitement":
-                            statutSuivant = "Prête";
-                            break;
-                        case "Prête":
-                            statutSuivant = "Livrée";
-                            break;
-                        default:
-                            return; // Si déjà livrée ou inconnu, on ne fait rien
-                    }
-
-                    // 2. Demander une petite confirmation pour éviter les erreurs de clic
-                    MessageBoxResult result = MessageBox.Show(
-                        $"Passer la commande du statut '{statutActuel}' à '{statutSuivant}' ?",
-                        "Changement rapide de statut",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question
-                    );
-
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        try
-                        {
-                            // 3. Mise à jour directe en Base de données
-                            using (MySqlConnection conn = new MySqlConnection(connectionString))
-                            {
-                                conn.Open();
-                                string query = "UPDATE commandes SET statut_commande = @statut WHERE id_commande = @id";
-
-                                using (MySqlCommand cmd = new MySqlCommand(query, conn))
-                                {
-                                    cmd.Parameters.AddWithValue("@statut", statutSuivant);
-                                    cmd.Parameters.AddWithValue("@id", idCommande);
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-
-                            // 4. Rafraîchir l'affichage et recalculer les compteurs du haut automatiquement !
-                            ChargerCommandes();
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Erreur lors du changement de statut : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                }
-            }
-        }
+       
 
     }
 }

@@ -33,7 +33,21 @@ namespace ElKharis.Views
             ChargerDonnees();
             TxtUserNom.Text = Session.NomUtilisateur;
             TxtUserRole.Text = Session.Role;
+            AppliquerRestrictionsDroits();
         }
+
+        private void AppliquerRestrictionsDroits()
+        {
+            if (Session.Role == "Réceptionniste")
+            {
+                BtnServices.Visibility = Visibility.Collapsed;
+                BtnArticles.Visibility = Visibility.Collapsed;
+                // BtnUtilisateurs.Visibility = Visibility.Collapsed;
+            }
+            // Si c'est l'Administrateur, ils restent visibles par défaut (Visibility.Visible)
+        }
+
+
 
         private void ChargerDonnees(string filtre = "")
         {
@@ -124,7 +138,6 @@ namespace ElKharis.Views
                     saveFileDialog.Filter = "Document PDF (*.pdf)|*.pdf";
                     saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-                    // Génère un nom de fichier propre (ex: FACTURE_14_Nom_Client.pdf)
                     string nomFichierPropre = $"{typeDoc.Replace(" ", "_")}_{idCommande}_{nomClient.Replace(" ", "_")}";
                     saveFileDialog.FileName = nomFichierPropre;
 
@@ -241,19 +254,16 @@ namespace ElKharis.Views
         }
         private void BtnImprimer_Click(object sender, RoutedEventArgs e)
         {
-            // CORRECTION : On récupère le bouton qui a déclenché l'événement
             if (sender is Button btn)
             {
-                // CORRECTION : On récupère la ligne sélectionnée (DataContext) de manière dynamique,
                 // sans avoir besoin de nommer GridFactures, DgRecus ou DgFactures.
                 if (btn.DataContext is DataRowView ligneSelectionnee)
                 {
                     int idCommande = Convert.ToInt32(ligneSelectionnee["id_commande"]);
 
                     // Récupération sécurisée du type de document et des colonnes de votre base de données
-                    // Note : utilisez "nom_client" ou "nom" selon ce que renvoie votre requête SQL
-                    string nomClient = (ligneSelectionnee.Row.Table.Columns.Contains("nom_client")
-                                        ? ligneSelectionnee["nom_client"]?.ToString()
+                    string nomClient = (ligneSelectionnee.Row.Table.Columns.Contains("nom")
+                                        ? ligneSelectionnee["nom"]?.ToString()
                                         : ligneSelectionnee["nom"]?.ToString()) ?? "Client";
 
                     string statut = ligneSelectionnee["statut_commande"]?.ToString() ?? "";

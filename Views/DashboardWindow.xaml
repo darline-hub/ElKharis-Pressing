@@ -3,50 +3,60 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:ElKharis.Views"
         mc:Ignorable="d"
-        Title="Dashboard-ElKharis" Height="700" Width="1100">
+        Title="Dashboard-ElKharis" Height="700" Width="1100" WindowStartupLocation="CenterScreen" Background="#F7FAFC">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Frame x:Name="MainFrame" Grid.Row="1" NavigationUIVisibility="Hidden"/>    
 
-        <Border Grid.Column="0" Background="#1A365D" BorderThickness="0,0,1,0" BorderBrush="#E2E8F0" Margin="0,0,10,0">
-            <Grid Margin="10,20,10,10">
+        <!-- ========================================================================================== -->
+        <!-- MENU LATÉRAL GAUCHE                                                                        -->
+        <!-- ========================================================================================== -->
+        <Border Grid.Column="0" Background="#1A365D" BorderThickness="0,0,1,0" BorderBrush="#E2E8F0">
+            <Grid Margin="15,20,15,15">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="1" Margin="0,0,10,0">
-                    <Image Source="/Resources/logo.jpeg" Height="80" Width="130" HorizontalAlignment="Center" Margin="0,0,0,-5" Stretch="Uniform"/>
-                    <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                <!-- Identité du Pressing & Bloc Utilisateur Connecté -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                    <Image Source="/Resources/logo.jpeg" Height="75" Width="120" HorizontalAlignment="Center" Margin="0,0,0,5" Stretch="Uniform"/>
+                    <TextBlock Text="EL-KHARIS" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,0"/>
+                    <TextBlock Text="L'excellence au service de votre éclat" Foreground="#CBD5E0" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,0,0,0" TextWrapping="Wrap" TextAlignment="Center"/>
 
-                    <Border Background="#2B6CB0" CornerRadius="8" Padding="1" Margin="0,5,0,10">
-                        <StackPanel HorizontalAlignment="Center" Margin="5">
-                            <TextBlock x:Name="TxtUserNom" Text="Nom de l'utilisateur" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                    <!-- Bloc Utilisateur Dynamique -->
+                    <Border Background="#2B6CB0" CornerRadius="8" Padding="10,8,10,8" Margin="0,5,0,10">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtUserNom" Text="Nom de l'utilisateur" Foreground="White" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                             <TextBlock x:Name="TxtUserRole" Text="Rôle" Foreground="#CBD5E0" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" Margin="0,3,0,0"/>
                         </StackPanel>
                     </Border>
+                </StackPanel>
 
-                    <Button Content="📊 Tableau de bord" Background="#2B6CB0" Foreground="White" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand">
+                <!-- Liens de Navigation -->
+                <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                    <Button Content="📊 Tableau de bord" Background="#2B6CB0" Foreground="White" FontSize="13" Height="42" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Margin="0,2,0,2">
                         <Button.Resources>
                             <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="8"/>
+                                <Setter Property="CornerRadius" Value="6"/>
                             </Style>
                         </Button.Resources>
                     </Button>
-                    <Button Content="🧺 Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnCommandes_Click"/>
-                    <Button Content="👥 Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnClients_Click"/>
-                    <Button  Content="💳 Factures &amp; Reçus" Background="Transparent" Foreground="White" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Click="BtnFactures_Click"/>
-                    <Button Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnArticles_Click"/>
-                    <Button Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnServices_Click"/>
+                    <Button Content="🧺 Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Margin="0,2,0,2" Click="BtnCommandes_Click"/>
+                    <Button Content="👥 Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Margin="0,2,0,2" Click="BtnClients_Click"/>
+                    <Button Content="💳 Factures &amp; Reçus" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,2,0,2" Click="BtnFactures_Click"/>
+                    <Button x:Name="BtnArticles" Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,2,0,2" Click="BtnArticles_Click"/>
+                    <Button x:Name="BtnServices" Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,2,0,2" Click="BtnServices_Click"/>
                 </StackPanel>
 
-                <Button Grid.Row="2" Content="Déconnexion" Background="#E53E3E" Foreground="White" FontWeight="Bold" FontSize="14" Height="40" Margin="15,0,15,0" Cursor="Hand" BorderThickness="0" Click="BtnLogout_Click">
+                <!-- Bouton Déconnexion -->
+                <Button Grid.Row="2" Content="Déconnexion" Background="#E53E3E" Foreground="White" FontWeight="Bold" FontSize="13" Height="38" Margin="5,0,5,0" Cursor="Hand" BorderThickness="0" Click="BtnLogout_Click">
                     <Button.Resources>
                         <Style TargetType="Border">
                             <Setter Property="CornerRadius" Value="6"/>
@@ -56,94 +66,132 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Column="1" Margin="30,20,30,20">
+        <!-- ========================================================================================== -->
+        <!-- CONTENU PRINCIPAL DU DASHBOARD                                                             -->
+        <!-- ========================================================================================== -->
+        <Grid Grid.Column="1" Margin="25,20,25,20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,10,0,15">
+            <!-- Entête du contenu -->
+            <Grid Grid.Row="0" Margin="0,5,0,15">
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Tableau de bord" FontSize="26" FontWeight="Bold" Foreground="#2D3748"/>
+                    <TextBlock Text="Tableau de bord" FontSize="24" FontWeight="Bold" Foreground="#2D3748"/>
                     <TextBlock Text="Vue d'ensemble de l'activité du pressing" FontSize="13" Foreground="#718096"/>
                 </StackPanel>
                 <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#A0AEC0" FontWeight="Bold" FontSize="18" Cursor="Hand" Click="BtnQuitter_Click"/>
             </Grid>
 
-            <UniformGrid Grid.Row="1" Columns="3" Rows="1" Height="100" Margin="0,0,0,20">
-                <Border Background="White" CornerRadius="10" Margin="0,0,10,0" Padding="20,15,20,15">
+            <!-- Les 3 Cartes d'indicateurs du Haut -->
+            <UniformGrid Grid.Row="1" Columns="3" Rows="1" Height="90" Margin="0,0,0,15">
+                <!-- Carte 1 : Commandes du jour -->
+                <Border Background="White" CornerRadius="8" Margin="0,0,8,0" Padding="15,10,15,10" BorderThickness="1" BorderBrush="#EDF2F7">
                     <Grid>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Commandes du jour" FontSize="14" Foreground="#A0AEC0" FontWeight="SemiBold"/>
-                            <TextBlock x:Name="TxtCommandesJour" Text="0" FontSize="24" FontWeight="Bold" Foreground="#2D3748" Margin="0,5,0,0"/>
+                            <TextBlock Text="Commandes du jour" FontSize="13" Foreground="#A0AEC0" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtCommandesJour" Text="0" FontSize="22" FontWeight="Bold" Foreground="#2D3748" Margin="0,3,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="📋" FontSize="26" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#4299E1"/>
+                        <TextBlock Text="📋" FontSize="24" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#4299E1"/>
                     </Grid>
                 </Border>
 
-                <Border Background="White" CornerRadius="10" Margin="5,0,5,0" Padding="20,15,20,15">
+                <!-- Carte 2 : Chiffre d'affaires -->
+                <Border Background="White" CornerRadius="8" Margin="4,0,4,0" Padding="15,10,15,10" BorderThickness="1" BorderBrush="#EDF2F7">
                     <Grid>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Chiffre d'affaires (FCFA)" FontSize="14" Foreground="#A0AEC0" FontWeight="SemiBold"/>
-                            <TextBlock x:Name="TxtChiffreAffaires" Text="0" FontSize="24" FontWeight="Bold" Foreground="#DD6B20" Margin="0,5,0,0"/>
+                            <TextBlock Text="Chiffre d'affaires (FCFA)" FontSize="13" Foreground="#A0AEC0" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtChiffreAffaires" Text="0" FontSize="22" FontWeight="Bold" Foreground="#DD6B20" Margin="0,3,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="💰" FontSize="26" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#ED8936"/>
+                        <TextBlock Text="💰" FontSize="24" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#ED8936"/>
                     </Grid>
                 </Border>
 
-                <Border Background="White" CornerRadius="10" Margin="10,0,0,0" Padding="20,15,20,15">
+                <!-- Carte 3 : Clients actifs -->
+                <Border Background="White" CornerRadius="8" Margin="8,0,0,0" Padding="15,10,15,10" BorderThickness="1" BorderBrush="#EDF2F7">
                     <Grid>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Clients actifs" FontSize="14" Foreground="#A0AEC0" FontWeight="SemiBold"/>
-                            <TextBlock x:Name="TxtClientsActifs" Text="0" FontSize="24" FontWeight="Bold" Foreground="#38A169" Margin="0,5,0,0"/>
+                            <TextBlock Text="Clients actifs" FontSize="13" Foreground="#A0AEC0" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtClientsActifs" Text="0" FontSize="22" FontWeight="Bold" Foreground="#38A169" Margin="0,3,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="👥" FontSize="26" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#48BB78"/>
+                        <TextBlock Text="👥" FontSize="24" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#48BB78"/>
                     </Grid>
                 </Border>
             </UniformGrid>
+
+            <!-- Zone Basse : Graphique (Gauche) + Commandes Récentes (Droite) -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.6*"/>
-                    <ColumnDefinition Width="1.4*"/>
+                    <ColumnDefinition Width="1.5*"/>
+                    <ColumnDefinition Width="1.3*"/>
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Column="0" Margin="0,0,15,0">
+                <!-- BLOC GAUCHE : Graphique & Services Populaires -->
+                <Grid Grid.Column="0" Margin="0,0,12,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1.4*"/>
                         <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Background="White" CornerRadius="10" Margin="0,0,0,15" Padding="20">
-                        <Grid>
-                            <TextBlock Text="📈 Évolution du Chiffre d'Affaires" FontWeight="Bold" FontSize="16" Foreground="#1A365D"/>
-                            <TextBlock Text="Graphique (7 prochains jours) à intégrer" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A0AEC0" FontSize="13"/>
-                        </Grid>
-                    </Border>
-
-                    <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="20">
+                    <!-- Intégration Réelle de LiveCharts pour l'évolution du CA -->
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Margin="0,0,0,12" Padding="10" BorderThickness="1" BorderBrush="#EDF2F7">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                <TextBlock Text="Services les plus demandés" FontSize="16" FontWeight="Bold" Foreground="#1A365D"/>
-                            </StackPanel>
+                            <TextBlock Grid.Row="0" Text="📈 Évolution du Chiffre d'Affaires (7 derniers jours)" FontWeight="Bold" FontSize="14" Foreground="#1A365D" Margin="0,0,0,10"/>
+
+                            <!-- Composant graphique connecté au Code-Behind -->
+                            <lvc:CartesianChart x:Name="GraphiqueChiffre" Margin="10,10,10,2" Grid.Row="1">
+
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis x:Name="AxeXDates" Title="Jours de la semaine">
+                                        <lvc:Axis.Separator>
+                                            <lvc:Separator IsEnabled="False" />
+                                        </lvc:Axis.Separator>
+                                    </lvc:Axis>
+                                </lvc:CartesianChart.AxisX>
+
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Chiffre d'Affaires (en milliers de FCFA)" 
+                  MinValue="0" 
+                  Unit="10000">
+                                        <lvc:Axis.Separator>
+                                            <lvc:Separator StrokeThickness="0.5" Stroke="#E0E0E0" />
+                                        </lvc:Axis.Separator>
+                                    </lvc:Axis>
+                                </lvc:CartesianChart.AxisY>
+
+                            </lvc:CartesianChart>
+                        </Grid>
+                    </Border>
+
+                    <!-- Liste des Services les plus demandés -->
+                    <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="10" BorderThickness="1" BorderBrush="#EDF2F7">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Services les plus demandés" FontSize="14" FontWeight="Bold" Foreground="#1A365D" Margin="0,0,0,5"/>
 
                             <ItemsControl x:Name="IcServicesPopulaires" Grid.Row="1" Background="Transparent" BorderThickness="0">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Margin="0,5,0,10">
+                                        <StackPanel Margin="0,4,0,8">
                                             <Grid>
-                                                <TextBlock Text="{Binding nom_service}" FontSize="13" FontWeight="Medium" Foreground="#4A5568"/>
-                                                <TextBlock Text="{Binding total_demandes, StringFormat='{}{0} fois'}" FontSize="12" Foreground="#718096" HorizontalAlignment="Right"/>
+                                                <TextBlock Text="{Binding nom_service}" FontSize="12" FontWeight="Medium" Foreground="#4A5568"/>
+                                                <TextBlock Text="{Binding total_demandes, StringFormat='{}{0} fois'}" FontSize="11" Foreground="#718096" HorizontalAlignment="Right"/>
                                             </Grid>
-                                            <ProgressBar Value="{Binding total_demandes}" Maximum="{Binding MaxDemandes}" Height="8" Margin="0,5,0,0" Foreground="#4299E1" Background="#EDF2F7">
+                                            <ProgressBar Value="{Binding total_demandes}" Maximum="{Binding MaxDemandes}" Height="6" Margin="0,4,0,0" Foreground="#4299E1" Background="#EDF2F7">
                                                 <ProgressBar.Resources>
                                                     <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                        <Setter Property="CornerRadius" Value="3"/>
                                                     </Style>
                                                 </ProgressBar.Resources>
                                             </ProgressBar>
@@ -155,27 +203,28 @@
                     </Border>
                 </Grid>
 
-                <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="20">
+                <!-- BLOC DROITE : Commandes Récentes -->
+                <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="15" BorderThickness="1" BorderBrush="#EDF2F7">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
                             <StackPanel>
-                                <TextBlock Text="Commandes récentes" FontSize="16" FontWeight="Bold" Foreground="#1A365D"/>
+                                <TextBlock Text="Commandes récentes" FontSize="14" FontWeight="Bold" Foreground="#1A365D"/>
                                 <TextBlock Text="Les derniers dépôts enregistrés" FontSize="11" Foreground="#A0AEC0"/>
                             </StackPanel>
                             <Button Content="Voir tout" HorizontalAlignment="Right" VerticalAlignment="Center" 
-                        Background="Transparent" BorderThickness="0" Foreground="#00A3C4" FontWeight="SemiBold" 
-                        Cursor="Hand" Click="BtnCommandes_Click"/>
+                                    Background="Transparent" BorderThickness="0" Foreground="#00A3C4" FontWeight="SemiBold" 
+                                    Cursor="Hand" Click="BtnCommandes_Click"/>
                         </Grid>
 
                         <ListBox x:Name="LvCommandesRecentes" Grid.Row="1" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#F4F6FA" BorderThickness="0,0,0,1" Padding="0,12,0,12">
+                                    <Border BorderBrush="#F4F6FA" BorderThickness="0,0,0,1" Padding="0,10,0,10">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
@@ -184,15 +233,15 @@
                                             </Grid.ColumnDefinitions>
 
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding nom_client}" FontWeight="SemiBold" FontSize="13" Foreground="#2D3748"/>
-                                                <TextBlock Text="{Binding heure_commande}" FontSize="11" Foreground="#A0AEC0" Margin="0,2,0,0"/>
+                                                <TextBlock Text="{Binding nom}" FontWeight="SemiBold" FontSize="12" Foreground="#2D3748"/>
+                                                <TextBlock Text="{Binding heure_commande}" FontSize="10" Foreground="#A0AEC0" Margin="0,1,0,0"/>
                                             </StackPanel>
 
-                                            <Border Grid.Column="1" VerticalAlignment="Center" Margin="5,0,15,0" Padding="6,3,6,3" CornerRadius="4" Background="#EBF8FF">
-                                                <TextBlock Text="{Binding statut_commande}" FontSize="10" FontWeight="Bold" Foreground="#2B6CB0"/>
+                                            <Border Grid.Column="1" VerticalAlignment="Center" Margin="5,0,10,0" Padding="6,3,6,3" CornerRadius="4" Background="#EBF8FF">
+                                                <TextBlock Text="{Binding statut_commande}" FontSize="9" FontWeight="Bold" Foreground="#2B6CB0"/>
                                             </Border>
 
-                                            <TextBlock Grid.Column="2" Text="{Binding montant_formatte}" FontWeight="Bold" FontSize="13" Foreground="#2D3748" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding montant_formatte}" FontWeight="Bold" FontSize="12" Foreground="#2D3748" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -203,5 +252,4 @@
             </Grid>
         </Grid>
     </Grid>
-
 </Window>

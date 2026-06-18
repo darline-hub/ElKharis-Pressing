@@ -1,49 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using ElKharis.Database;
-using ElKharis.Views;
 using MySql.Data.MySqlClient;
 using ElKharis.Models;
-using ElKharis.Services;
+using LiveCharts;
+using LiveCharts.Wpf;
 
 namespace ElKharis.Views
 {
-    /// <summary>
-    /// Logique d'interaction pour DashboardWindow.xaml
-    /// </summary>
     public partial class DashboardWindow : Window
     {
+        // Déclaration des propriétés requises pour LiveCharts au niveau de la classe
+        public SeriesCollection SeriesCollectionChiffre { get; set; }
+        public List<string> LabelsXDates { get; set; }
+
         public DashboardWindow()
         {
             InitializeComponent();
+
             TxtUserNom.Text = Session.NomUtilisateur;
             TxtUserRole.Text = Session.Role;
 
-            // Centralisation du chargement des données
+            // Initialisation des objets LiveCharts avant le chargement
+            SeriesCollectionChiffre = new SeriesCollection();
+            LabelsXDates = new List<string>();
+
             RafraichirDashboard();
+            AppliquerRestrictionsDroits();
         }
 
-        // Méthode publique pour pouvoir rafraîchir les stats depuis une autre fenêtre si nécessaire
+        private void AppliquerRestrictionsDroits()
+        {
+            if (Session.Role == "Réceptionniste")
+            {
+                BtnServices.Visibility = Visibility.Collapsed;
+                BtnArticles.Visibility = Visibility.Collapsed;
+                // BtnUtilisateurs.Visibility = Visibility.Collapsed;
+            }
+            // Si c'est l'Administrateur, ils restent visibles par défaut (Visibility.Visible)
+        }
+
+
+
         public void RafraichirDashboard()
         {
-            ChargerStatistiques();
+            ChargerIndicateursDuHaut();
+            ChargerGraphiqueCombinaison(); // Notre nouveau graphique dynamique
             ChargerCommandesRecentes();
             ChargerServicesPlusDemandes();
         }
 
-       private void ChargerStatistiques()
+        private void ChargerIndicateursDuHaut()
         {
             try
             {
@@ -51,74 +60,140 @@ namespace ElKharis.Views
                 {
                     if (conn == null) return;
 
-                    // Requête SQL pour récupérer le total par jour sur les 7 derniers jours
-                    string query = @"SELECT 
-                                DATE(date_commande) AS date_brute,
-                                DATE_FORMAT(date_commande, '%a') AS jour_nom,
-                                DATE_FORMAT(date_commande, '%d') AS jour_num,
-                                SUM(montant_total) AS total_jour
-                             FROM commandes
-                             WHERE date_commande >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-                             GROUP BY DATE(date_commande)
-                             ORDER BY DATE(date_commande) ASC";
-
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    // 1. Commandes du jour
+                    using (MySqlCommand cmd = new MySqlCommand("SELECT COUNT(*) FROM commandes WHERE DATE(date_commande) = CURDATE()", conn))
                     {
-                        using (MySqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            var donneesBrutes = new List<dynamic>();
-                            decimal montantMaximum = 0;
+                        TxtCommandesJour.Text = cmd.ExecuteScalar()?.ToString() ?? "0";
+                    }
 
-                            while (reader.Read())
-                            {
-                                string jourNom = reader["jour_nom"].ToString() ?? "";
-                                string jourNum = reader["jour_num"].ToString() ?? "";
+                    // 2. Chiffre d'Affaires Cumulé Global
+                    using (MySqlCommand cmd = new MySqlCommand("SELECT IFNULL(SUM(montant_verse), 0) FROM paiements", conn))
+                    {
+                        decimal caGlobal = Convert.ToDecimal(cmd.ExecuteScalar());
+                        TxtChiffreAffaires.Text = string.Format("{0:N0}", caGlobal).Replace(",", " ");
+                    }
 
-                                // Traduction des jours de MySQL (anglais court) vers le français
-                                jourNom = jourNom.ToLower() switch
-                                {
-                                    "mon" => "Lun.",
-                                    "tue" => "Mar.",
-                                    "wed" => "Mer.",
-                                    "thu" => "Jeu.",
-                                    "fri" => "Ven.",
-                                    "sat" => "Sam.",
-                                    "sun" => "Dim.",
-                                    _ => jourNom
-                                };
-
-                                string affichageJour = $"{jourNom} {jourNum}";
-                                decimal total = Convert.ToDecimal(reader["total_jour"]);
-
-                                if (total > montantMaximum) montantMaximum = total;
-
-                                donneesBrutes.Add(new { JourLibelle = affichageJour, Total = total });
-                            }
-
-                            // Sécurité division par zéro
-                            if (montantMaximum == 0) montantMaximum = 1;
-
-                            // Échelle visuelle (pixels max de la barre)
-                            double hauteurMaxGraphique = 140;
-
-                            // Construction finale de la liste pour le Binding WPF
-                            var donneesGraphique = donneesBrutes.Select(d => new
-                            {
-                                Jour = d.JourLibelle,
-                                MontantFormatte = d.Total > 0 ? string.Format("{0:N0} F", d.Total).Replace(",", " ") : "0 F",
-                                HauteurBarre = (double)(d.Total / montantMaximum) * hauteurMaxGraphique + 5
-                            }).ToList();
-
-                            // Remplissage du graphique
-                            //IcGraphiqueChiffre.ItemsSource = donneesGraphique;
-                        }
+                    // 3. Clients Actifs
+                    using (MySqlCommand cmd = new MySqlCommand("SELECT COUNT(DISTINCT id_client) FROM commandes", conn))
+                    {
+                        TxtClientsActifs.Text = cmd.ExecuteScalar()?.ToString() ?? "0";
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors du chargement du graphique sur 7 jours : " + ex.Message,
-                                "Erreur graphique", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Erreur indicateurs : " + ex.Message);
+            }
+        }
+
+        private void ChargerGraphiqueCombinaison()
+        {
+            try
+            {
+                using (MySqlConnection? conn = DbConnection.GetConnection())
+                {
+                    if (conn == null) return;
+
+                    // Requête SQL pour récupérer le chiffre d'affaires des 7 derniers jours réels
+                    string queryGraph = @"SELECT DATE(date_paiement) AS date_p, 
+                                         SUM(montant_verse) AS total_jour
+                                  FROM paiements
+                                  WHERE date_paiement >= DATE_SUB(CURDATE(), INTERVAL 8 DAY)
+                                  GROUP BY DATE(date_paiement)
+                                  ORDER BY DATE(date_paiement) ASC";
+
+                    // Préparation du dictionnaire pour stocker les jours (uniquement du Lundi au Vendredi)
+                    var statsSemaine = new Dictionary<string, (string Label, double Montant)>();
+
+                    // On remonte le temps pour trouver les 5 derniers jours ouvrés (du Lundi au Vendredi)
+                    int joursAjoutes = 0;
+                    int decalage = 6; // On regarde sur la semaine glissante
+
+                    while (joursAjoutes < 5 && decalage >= 0)
+                    {
+                        DateTime dateCible = DateTime.Today.AddDays(-decalage);
+
+                        // On exclut le Samedi (Saturday) et le Dimanche (Sunday)
+                        if (dateCible.DayOfWeek != DayOfWeek.Saturday && dateCible.DayOfWeek != DayOfWeek.Sunday)
+                        {
+                            string key = dateCible.ToString("yyyy-MM-dd");
+
+                            string jourFr = dateCible.DayOfWeek switch
+                            {
+                                DayOfWeek.Monday => "Lun.",
+                                DayOfWeek.Tuesday => "Mar.",
+                                DayOfWeek.Wednesday => "Mer.",
+                                DayOfWeek.Thursday => "Jeu.",
+                                DayOfWeek.Friday => "Ven.",
+                                _ => dateCible.ToString("ddd")
+                            };
+
+                            statsSemaine.Add(key, (jourFr, 0.0));
+                            joursAjoutes++;
+                        }
+                        decalage--;
+                    }
+
+                    // Remplissage avec les vraies valeurs de la base de données
+                    using (MySqlCommand cmd = new MySqlCommand(queryGraph, conn))
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (reader["date_p"] != DBNull.Value)
+                            {
+                                string dateBDD = Convert.ToDateTime(reader["date_p"]).ToString("yyyy-MM-dd");
+                                if (statsSemaine.ContainsKey(dateBDD))
+                                {
+                                    string labelExistant = statsSemaine[dateBDD].Label;
+                                    double totalJour = Convert.ToDouble(reader["total_jour"]);
+                                    statsSemaine[dateBDD] = (labelExistant, totalJour);
+                                }
+                            }
+                        }
+                    }
+
+                    // Extraction finale pour LiveCharts
+                    var valeursChiffre = new ChartValues<double>();
+                    LabelsXDates.Clear();
+
+                    foreach (var kvp in statsSemaine)
+                    {
+                        LabelsXDates.Add(kvp.Value.Label);       // Ajoutera uniquement "Lun.", "Mar.", "Mer.", "Jeu.", "Ven."
+                        valeursChiffre.Add(kvp.Value.Montant);   // Montant associé
+                    }
+
+                    // Construction de l'affichage unique (Barre + Ligne de tendance)
+                    SeriesCollectionChiffre = new SeriesCollection
+            {
+                // 1. Les Barres Bleues du Chiffre d'Affaires
+                new ColumnSeries
+                {
+                    Title = "Chiffre d'Affaires",
+                    Values = valeursChiffre,
+                    Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(84, 153, 255)),
+                    DataLabels = true // Montant affiché au-dessus de la barre
+                },
+                // 2. La ligne unique de liaison
+                new LineSeries
+                {
+                    Title = "Évolution",
+                    Values = valeursChiffre,
+                    Fill = System.Windows.Media.Brushes.Transparent,
+                    Stroke = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(40, 167, 69)), // Ligne verte oblique
+                    PointGeometrySize = 6,
+                    LineSmoothness = 0
+                }
+            };
+
+                    // Injection dynamique dans le XAML
+                    GraphiqueChiffre.Series = SeriesCollectionChiffre;
+                    AxeXDates.Labels = LabelsXDates.ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur graphique : " + ex.Message);
             }
         }
         private void ChargerCommandesRecentes()
@@ -129,27 +204,25 @@ namespace ElKharis.Views
                 {
                     if (conn == null) return;
 
+                    // Correction ici : l'alias est bien 'nom_client' pour résoudre votre erreur XAML
                     string query = @"SELECT 
-                                        CONCAT(cl.nom, ' ', IFNULL(cl.prenom, '')) AS nom_client,
+                                        CONCAT(cl.nom, ' ', IFNULL(cl.prenom, '')) AS nom,
                                         DATE_FORMAT(c.date_commande, '%H:%i') AS heure_commande,
                                         c.statut_commande,
                                         CONCAT(FORMAT(c.montant_total, 0), ' FCFA') AS montant_formatte
                                      FROM commandes c
                                      INNER JOIN clients cl ON c.id_client = cl.id_client
-                                     ORDER BY c.date_commande DESC
-                                     LIMIT 8";
+                                     ORDER BY c.date_commande DESC LIMIT 8";
 
                     MySqlDataAdapter da = new MySqlDataAdapter(query, conn);
-                    System.Data.DataTable dt = new System.Data.DataTable();
+                    DataTable dt = new DataTable();
                     da.Fill(dt);
-
                     LvCommandesRecentes.ItemsSource = dt.DefaultView;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors du chargement des commandes récentes : " + ex.Message,
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Erreur commandes récentes : " + ex.Message);
             }
         }
 
@@ -161,57 +234,51 @@ namespace ElKharis.Views
                 {
                     if (conn == null) return;
 
-                    string query = @"SELECT 
-                                        s.nom_service, 
-                                        COUNT(dc.id) AS total_demandes
+                    string query = @"SELECT s.nom_service, COUNT(dc.id) AS total_demandes
                                      FROM detail_commandes dc
                                      INNER JOIN services s ON dc.id = s.id
                                      GROUP BY s.id, s.nom_service
-                                     ORDER BY total_demandes DESC
-                                     LIMIT 3";
+                                     ORDER BY total_demandes DESC LIMIT 3";
 
                     MySqlDataAdapter da = new MySqlDataAdapter(query, conn);
-                    System.Data.DataTable dt = new System.Data.DataTable();
+                    DataTable dt = new DataTable();
                     da.Fill(dt);
 
-                    int maxDemandes = 10;
-                    if (dt.Rows.Count > 0)
-                    {
-                        maxDemandes = Convert.ToInt32(dt.Rows[0]["total_demandes"]);
-                    }
-
+                    int maxDemandes = dt.Rows.Count > 0 ? Convert.ToInt32(dt.Rows[0]["total_demandes"]) : 10;
                     dt.Columns.Add("MaxDemandes", typeof(int));
-                    foreach (System.Data.DataRow row in dt.Rows)
-                    {
-                        row["MaxDemandes"] = maxDemandes;
-                    }
+                    foreach (DataRow row in dt.Rows) { row["MaxDemandes"] = maxDemandes; }
+
                     IcServicesPopulaires.ItemsSource = dt.DefaultView;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors du chargement des services populaires : " + ex.Message,
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Erreur services populaires : " + ex.Message);
             }
         }
 
-        // ==========================================
-        //        NAVIGATION OPTIMISÉE (SUITE)
-        // ==========================================
+        private void BtnQuitter_Click(object sender, RoutedEventArgs e) => this.Close();
+
+        private void BtnLogout_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Êtes-vous sûr de vouloir vous déconnecter ?", "Déconnexion", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                this.Close();
+            }
+        }
 
         private void BtnClients_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 ClientsWindow cltWin = new ClientsWindow();
-                cltWin.Owner = this; // Démarre la relation Parent -> Enfant
                 cltWin.Show();
-                this.Hide(); // Cache simplement le dashboard sans le détruire
+                this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des clients : {ex.Message}",
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des clients : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -220,30 +287,12 @@ namespace ElKharis.Views
             try
             {
                 ArticlesWindow articles = new ArticlesWindow();
-                articles.Owner = this;
                 articles.Show();
-                this.Hide();
+                this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des articles : {ex.Message}",
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void BtnServices_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                ServicesWindow services = new ServicesWindow();
-                services.Owner = this;
-                services.Show();
-                this.Hide();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des services : {ex.Message}",
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des articles : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -251,15 +300,13 @@ namespace ElKharis.Views
         {
             try
             {
-                CommandesWindow fenetreCommandes = new CommandesWindow();
-                fenetreCommandes.Owner = this; // Très important !
-                fenetreCommandes.Show();
-                this.Hide();
+                CommandesWindow commandes = new CommandesWindow();
+                commandes.Show();
+                this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des commandes : {ex.Message}",
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des commandes : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -268,37 +315,28 @@ namespace ElKharis.Views
             try
             {
                 FacturesWindow factures = new FacturesWindow();
-                factures.Owner = this; // Très important !
                 factures.Show();
-                this.Hide();
+                this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre d : {ex.Message}",
-                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des paiements et factures : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void BtnLogout_Click(object sender, RoutedEventArgs e)
+        private void BtnServices_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("Êtes-vous sûr de vouloir vous déconnecter ?", "Déconnexion", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
+            try
             {
-                LoginWindow login = new LoginWindow();
-                login.Show();
-                this.Close(); // Ici le Close est normal car on quitte l'application vers le login
+                ServicesWindow services = new ServicesWindow();
+                services.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre des services : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void BtnQuitter_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
-
-        private void BtnMenuFacturation_Click(object sender, RoutedEventArgs e)
-        {
-            FacturesWindow facWindow = new FacturesWindow();
-            facWindow.ShowDialog();
-        }
     }
 }
