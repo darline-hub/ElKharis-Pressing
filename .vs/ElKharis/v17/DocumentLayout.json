@@ -3,28 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\utilisateurswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\utilisateurswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\services\\documentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:services\\documentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\formutilisateurwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\formutilisateurwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\formutilisateurwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\formutilisateurwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\utilisateurswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\utilisateurswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\signinwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\signinwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\nouveauclientwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\nouveauclientwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\factureswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\factureswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\dashboardwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
@@ -39,8 +23,32 @@
       "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\clientswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\factureswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\factureswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\utilisateurswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\utilisateurswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\utilisateurswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\utilisateurswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\nouveauclientwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\nouveauclientwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\formutilisateurwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\formutilisateurwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\formutilisateurwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\formutilisateurwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\nouveauclientwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\nouveauclientwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\signinwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\signinwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\clientswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -49,10 +57,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\declarerincidentwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\declarerincidentwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\services\\documentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:services\\documentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\dashboardwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -95,10 +99,6 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:obj\\Debug\\net8.0-windows\\Views\\CommandesWindow.g.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|c:\\users\\nt store\\source\\repos\\elkharis-pressing\\views\\nouveauclientwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B9B5393B-F424-41B0-B0B0-50A99FFDC2DC}|ElKharis.csproj|solutionrelative:views\\nouveauclientwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\NT Store\\AppData\\Local\\Temp\\.vsdbgsrc\\17e6783f55e26aada830f1c970a9b5cdc1f516dbfd26ed211b6f06fd4b85bd6c\\NavigationService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -117,7 +117,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 9,
           "Children": [
             {
               "$type": "Bookmark",
@@ -129,20 +129,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 8,
               "Title": "FormUtilisateurWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\FormUtilisateurWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\FormUtilisateurWindow.xaml.cs",
               "ToolTip": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\FormUtilisateurWindow.xaml.cs",
               "RelativeToolTip": "Views\\FormUtilisateurWindow.xaml.cs",
-              "ViewState": "AgIAACAAAAAAAAAAAAAQwDkAAABTAAAAAAAAAA==",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAIwF8AAABKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-19T13:17:17.06Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 9,
               "Title": "FormUtilisateurWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\FormUtilisateurWindow.xaml",
               "RelativeDocumentMoniker": "Views\\FormUtilisateurWindow.xaml",
@@ -154,20 +154,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 6,
               "Title": "UtilisateursWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\UtilisateursWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\UtilisateursWindow.xaml.cs",
               "ToolTip": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\UtilisateursWindow.xaml.cs",
               "RelativeToolTip": "Views\\UtilisateursWindow.xaml.cs",
-              "ViewState": "AgIAAKUAAAAAAAAAAAAIwMAAAABVAAAAAAAAAA==",
+              "ViewState": "AgIAAIcAAAAAAAAAAAAAwLcAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-19T12:24:22.249Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "UtilisateursWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\UtilisateursWindow.xaml",
               "RelativeDocumentMoniker": "Views\\UtilisateursWindow.xaml",
@@ -179,7 +179,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 13,
               "Title": "DeclarerIncidentWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\DeclarerIncidentWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\DeclarerIncidentWindow.xaml.cs",
@@ -192,7 +192,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "DeclarerIncidentWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\DeclarerIncidentWindow.xaml",
               "RelativeDocumentMoniker": "Views\\DeclarerIncidentWindow.xaml",
@@ -204,7 +204,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 1,
               "Title": "FacturesWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\FacturesWindow.xaml",
               "RelativeDocumentMoniker": "Views\\FacturesWindow.xaml",
@@ -216,13 +216,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 0,
               "Title": "DocumentService.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Services\\DocumentService.cs",
               "RelativeDocumentMoniker": "Services\\DocumentService.cs",
               "ToolTip": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Services\\DocumentService.cs",
               "RelativeToolTip": "Services\\DocumentService.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAACUAAAB7AAAAAAAAAA==",
+              "ViewState": "AgIAAC8BAAAAAAAAAAAIwEoBAABKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-16T17:36:09Z",
               "EditorCaption": ""
@@ -253,7 +253,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 11,
               "Title": "SigninWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\SigninWindow.xaml",
               "RelativeDocumentMoniker": "Views\\SigninWindow.xaml",
@@ -265,19 +265,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 7,
               "Title": "NouveauClientWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\NouveauClientWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\NouveauClientWindow.xaml.cs",
               "ToolTip": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\NouveauClientWindow.xaml.cs",
               "RelativeToolTip": "Views\\NouveauClientWindow.xaml.cs",
-              "ViewState": "AgIAADAAAAAAAAAAAAAYwEYAAABNAAAAAAAAAA==",
+              "ViewState": "AgIAAJwAAAAAAAAAAAAqwK4AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-14T12:17:00.12Z"
+              "WhenOpened": "2026-06-14T12:17:00.12Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 10,
               "Title": "NouveauClientWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\NouveauClientWindow.xaml",
               "RelativeDocumentMoniker": "Views\\NouveauClientWindow.xaml",
@@ -301,7 +302,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 12,
               "Title": "ClientsWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\ClientsWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\ClientsWindow.xaml.cs",
@@ -314,7 +315,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 4,
               "Title": "ClientsWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\ClientsWindow.xaml",
               "RelativeDocumentMoniker": "Views\\ClientsWindow.xaml",
@@ -326,7 +327,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 23,
               "Title": "CommandesWindow.g.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\obj\\Debug\\net8.0-windows\\Views\\CommandesWindow.g.cs",
               "RelativeDocumentMoniker": "obj\\Debug\\net8.0-windows\\Views\\CommandesWindow.g.cs",
@@ -338,7 +339,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 22,
               "Title": "NouvelleCommandeWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\NouvelleCommandeWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\NouvelleCommandeWindow.xaml.cs",
@@ -350,7 +351,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 21,
               "Title": "NouvelleCommandeWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\NouvelleCommandeWindow.xaml",
               "RelativeDocumentMoniker": "Views\\NouvelleCommandeWindow.xaml",
@@ -361,7 +362,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "CommandesWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\CommandesWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\CommandesWindow.xaml.cs",
@@ -374,7 +375,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 3,
               "Title": "CommandesWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\CommandesWindow.xaml",
               "RelativeDocumentMoniker": "Views\\CommandesWindow.xaml",
@@ -386,7 +387,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "DashboardWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\DashboardWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\DashboardWindow.xaml.cs",
@@ -399,7 +400,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 2,
               "Title": "DashboardWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\DashboardWindow.xaml",
               "RelativeDocumentMoniker": "Views\\DashboardWindow.xaml",
@@ -411,7 +412,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 20,
               "Title": "LoginWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\LoginWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\LoginWindow.xaml.cs",
@@ -423,7 +424,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 19,
               "Title": "DbConnection.cs",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Database\\DbConnection.cs",
               "RelativeDocumentMoniker": "Database\\DbConnection.cs",
@@ -435,7 +436,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "App.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\App.xaml",
               "RelativeDocumentMoniker": "App.xaml",
@@ -447,7 +448,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "LoginWindow.xaml",
               "DocumentMoniker": "C:\\Users\\NT Store\\source\\repos\\ElKharis-Pressing\\Views\\LoginWindow.xaml",
               "RelativeDocumentMoniker": "Views\\LoginWindow.xaml",

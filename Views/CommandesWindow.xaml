@@ -69,7 +69,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Commandes" FontSize="26" FontWeight="Bold" Foreground="#1A202C"/>
+                    <TextBlock Text="Commandes" FontSize="26" FontWeight="Bold" Foreground="#0A2540"/>
                     <TextBlock Text="Suivi en temps réel et gestion de l'état des vêtements reçus" FontSize="14" Foreground="#4A5568" Margin="0,2,0,0"/>
                 </StackPanel>
 
@@ -93,9 +93,9 @@
                         </Style>
                     </Button.Resources>
                 </Button>
-                <Border BorderThickness="1.5" BorderBrush="#CBD5E0" CornerRadius="8" Background="White" Padding="12,5" Width="450" Height="36">
+                <Border BorderThickness="1.5" BorderBrush="#CBD5E0" CornerRadius="8" Background="White" Padding="5" Width="450" Height="36">
                     <Grid>
-                        <TextBox x:Name="TxtRecherche" BorderThickness="0" Background="Transparent" FontSize="14" Foreground="#2D3748" VerticalContentAlignment="Center" TextChanged="TxtRecherche_TextChanged"/>
+                        <TextBox x:Name="TxtRecherche" BorderThickness="0" Background="Transparent" FontSize="12" Foreground="#2D3748" VerticalContentAlignment="Center" TextChanged="TxtRecherche_TextChanged"/>
                         <TextBlock Text="Rechercher par numéro de commande, nom de client..." Foreground="#A0AEC0" IsHitTestVisible="False" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="{x:Type TextBlock}">
@@ -188,16 +188,16 @@
 
                     <DataGrid x:Name="DgCommandes" Grid.Row="0" AutoGenerateColumns="False" IsReadOnly="True" 
                   Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="Horizontal" 
-                  HorizontalGridLinesBrush="#EDF2F7" RowHeight="48" FontSize="13.5" Foreground="#2D3748"
+                  HorizontalGridLinesBrush="#EDF2F7" RowHeight="48" FontSize="12" Foreground="#2D3748"
                   AlternatingRowBackground="#F8FAFC" MouseDoubleClick="DgCommandes_MouseDoubleClick">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="N° Commande" Binding="{Binding numero_commande}" Width="170"/>
+                            <DataGridTextColumn Header="N° Commande" Binding="{Binding numero_commande}" Width="165"/>
                             <DataGridTextColumn Header="Clients" Binding="{Binding nom_complet}" Width="*"/>
                             <DataGridTextColumn Header="Date de Dépôt" Binding="{Binding date_commande, StringFormat=\{0:dd/MM/yyyy\}}" Width="100"/>
-                            <DataGridTextColumn Header="Total Facturé" Binding="{Binding montant_total, StringFormat=\{0:N0\} FCFA}" Width="120"/>
+                            <DataGridTextColumn Header="Total Facturé" Binding="{Binding montant_total, StringFormat=\{0:N0\} FCFA}" Width="110"/>
 
-                            <DataGridTemplateColumn Header="Statut" Width="100">
+                            <DataGridTemplateColumn Header="Statut" Width="115">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Padding="10,5" CornerRadius="20" HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -256,7 +256,7 @@
                             <DataGridTemplateColumn Header="Avancer Statut" Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="⏭️" ToolTip="Suivant"  Foreground="#2B6CB0" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="14" Margin="0,0,12,0" Click="BtnSuivantStatut_Click" Tag="{Binding id_commande}">
+                                        <Button Content="⏭️" ToolTip="Suivant"  Foreground="#2B6CB0" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,12,0" Click="BtnSuivantStatut_Click" Tag="{Binding id_commande}">
                                         <Button.Style>
                                                 <Style TargetType="Button">
                                                     <Style.Triggers>
@@ -275,9 +275,9 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <Button Content="⚠️" ToolTip="Signaler un incident général" Foreground="#E53E3E" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="14" Margin="0,0,10,0" Click="BtnSignalerIncidentGlobal_Click" Tag="{Binding id_commande}"/>
-                                            <Button Content="📝" ToolTip="Modifier"  Foreground="Orange" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="14" Margin="0,0,12,0" Click="BtnModifierCommande_Click" Tag="{Binding id_commande}"/>
-                                            <Button Content="🗑️" ToolTip="Supprimer"  Foreground="Red" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="14" Click="BtnSupprimerCommande_Click" Tag="{Binding id_commande}"/>
+                                            <Button Content="⚠️" ToolTip="Signaler un incident général" Foreground="#E53E3E" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,0,0" Click="BtnSignalerIncidentGlobal_Click" Tag="{Binding id_commande}"/>
+                                            <Button Content="📝" ToolTip="Modifier"  Foreground="Orange" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,0,0" Click="BtnModifierCommande_Click" Tag="{Binding id_commande}"/>
+                                            <Button Content="🗑️" ToolTip="Supprimer"  Foreground="Red" Background="Transparent" BorderThickness="0" Cursor="Hand" FontSize="12" Click="BtnSupprimerCommande_Click" Tag="{Binding id_commande}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

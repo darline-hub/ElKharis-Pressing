@@ -134,9 +134,10 @@ namespace ElKharis.Views
         }
 
         // BOUTON MODIFIER
+        // BOUTON MODIFIER
         private void BtnModifier_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Sécurité de base
+            // On vérifie que la sélection n'est pas nulle
             if (DgUtilisateurs.SelectedItem == null)
             {
                 MessageBox.Show("Veuillez d'abord sélectionner un utilisateur dans le tableau à modifier.",
@@ -151,69 +152,35 @@ namespace ElKharis.Views
                 string email = "";
                 string role = "";
 
-                // 2. L'approche universelle : on extrait via un conteneur dynamique
-                // Cela fonctionne que ce soit un DataRowView, un objet anonyme ou une classe Utilisateur.
-                dynamic ligne = DgUtilisateurs.SelectedItem;
+                if (DgUtilisateurs.SelectedItem is System.Data.DataRowView drv)
+                {
+                    // Le point d'interrogation drv.Row?. protège contre le Warning CS8602
+                    System.Data.DataColumnCollection? colonnes = drv.Row?.Table?.Columns;
 
-                // On utilise l'opérateur de coalescence nulle (?.) pour intercepter le null AVANT le ToString()
-                id = ConvertirEnChaine(ligne, "id");
-                nom = ConvertirEnChaine(ligne, "nom_utilisateur");
-                email = ConvertirEnChaine(ligne, "email");
-                role = ConvertirEnChaine(ligne, "role");
+                    if (colonnes != null)
+                    {
+                        // Vérification stricte des colonnes pour éviter tout plantage
+                        id = colonnes.Contains("id") && drv["id"] != DBNull.Value ? drv["id"].ToString() ?? "" : "";
+                        nom = colonnes.Contains("nom_utilisateur") && drv["nom_utilisateur"] != DBNull.Value ? drv["nom_utilisateur"].ToString() ?? "" : "";
+                        email = colonnes.Contains("email") && drv["email"] != DBNull.Value ? drv["email"].ToString() ?? "" : "";
+                        role = colonnes.Contains("role") && drv["role"] != DBNull.Value ? drv["role"].ToString() ?? "" : "";
+                    }
+                }
 
-                // 3. Lancement du formulaire
+                // Ouverture sécurisée du formulaire
                 FormUtilisateurWindow frm = new FormUtilisateurWindow(id, nom, email, role);
                 frm.Owner = this;
 
                 if (frm.ShowDialog() == true)
                 {
-                    ChargerTousLesUtilisateurs(); // Rafraîchit le tableau
+                    ChargerTousLesUtilisateurs();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Impossible de lire les informations de l'utilisateur sélectionné.\n\nDétails de l'erreur : {ex.Message}",
-                                "Erreur critique de lecture", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de la lecture des données : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        // 4. METHODE MAGIQUE DE SECOURS (A coller juste en dessous de la méthode du bouton)
-        // Cette fonction intercepte absolument tous les types de valeurs nulles ou DBNull
-        private string? ConvertirEnChaine(dynamic objetLigne, string nomPropriete)
-        {
-            if (objetLigne == null) return "";
-
-            try
-            {
-                // Si c'est un DataRowView (liaison DataTable classique)
-                if (objetLigne is System.Data.DataRowView drv)
-                {
-                    if (drv.Row == null || !drv.Row.Table.Columns.Contains(nomPropriete)) return "";
-                    var val = drv[nomPropriete];
-                    return (val == null || val == DBNull.Value) ? "" : val.ToString();
-                }
-
-                // Si c'est un objet standard ou anonyme (liaison par classe)
-                // On tente de lire dynamiquement la propriété
-                var propriete = objetLigne.GetType().GetProperty(nomPropriete);
-                if (propriete != null)
-                {
-                    var val = propriete.GetValue(objetLigne, null);
-                    return (val == null || val == DBNull.Value) ? "" : val.ToString();
-                }
-            }
-            catch
-            {
-                // Si la réflexion dynamique échoue, on tente un accès direct par indexeur
-                try
-                {
-                    var val = objetLigne[nomPropriete];
-                    return (val == null || val == DBNull.Value) ? "" : val.ToString();
-                }
-                catch { }
-            }
-
-            return "";
         }
         private void BtnClients_Click(object sender, RoutedEventArgs e) { 
             try{

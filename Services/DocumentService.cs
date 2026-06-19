@@ -35,16 +35,17 @@ namespace ElKharis.Services
                 iTextBaseColor vertSlogan = new iTextBaseColor(40, 167, 69);  // #28A745
                 iTextBaseColor grisTexte = new iTextBaseColor(113, 128, 150); // #718096
                 iTextBaseColor grisSombre = new iTextBaseColor(31, 41, 55);    // #1F2937
-                iTextBaseColor rougeIncident = new iTextBaseColor(229, 62, 62); // #E53E3E (Pour l'affichage de l'anomalie)
+                iTextBaseColor rougeIncident = new iTextBaseColor(229, 62, 62); // #E53E3E
 
-                iTextFont fontEntreprise = new iTextFont(bf, 18, iTextFont.BOLD, bleuNuit);
+                // 1. MODIFICATION : Diminution de la police du titre de l'entreprise (de 18 à 14)
+                iTextFont fontEntreprise = new iTextFont(bf, 14, iTextFont.BOLD, bleuNuit);
                 iTextFont fontSlogan = new iTextFont(bf, 9.5f, iTextFont.ITALIC, vertSlogan);
                 iTextFont fontInfosEntreprise = new iTextFont(bf, 9, iTextFont.NORMAL, grisTexte);
 
                 iTextFont fontTitreDoc = new iTextFont(bf, 12, iTextFont.BOLD, bleuNuit);
                 iTextFont fontNormal = new iTextFont(bf, 10, iTextFont.NORMAL, grisSombre);
                 iTextFont fontBold = new iTextFont(bf, 10, iTextFont.BOLD, bleuNuit);
-                iTextFont fontIncident = new iTextFont(bf, 9, iTextFont.ITALIC, rougeIncident); // Police d'incident
+                iTextFont fontIncident = new iTextFont(bf, 9, iTextFont.ITALIC, rougeIncident);
                 iTextFont fontClientNom = new iTextFont(bf, 11, iTextFont.BOLD, grisSombre);
                 iTextFont fontSectionTitre = new iTextFont(bf, 10, iTextFont.BOLD, grisTexte);
 
@@ -65,7 +66,6 @@ namespace ElKharis.Services
                     string baseDir = AppDomain.CurrentDomain.BaseDirectory;
                     string cheminLogo = Path.Combine(baseDir, "Resources", "logo.jpeg");
 
-                    // Ce message te dira exactement où ton application cherche le logo
                     if (!File.Exists(cheminLogo))
                     {
                         MessageBox.Show($"Le logo est introuvable à cet endroit :\n{cheminLogo}",
@@ -74,7 +74,9 @@ namespace ElKharis.Services
                     else
                     {
                         iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance(cheminLogo);
-                        logo.ScaleToFit(60f, 60f);
+
+                        // 2. MODIFICATION : Augmentation de la taille globale du logo (de 60f à 90f)
+                        logo.ScaleToFit(90f, 90f);
                         logo.Alignment = iTextElement.ALIGN_LEFT;
                         cellGauche.AddElement(logo);
                     }
@@ -173,19 +175,18 @@ namespace ElKharis.Services
                         decimal totalLigne = pu * qte;
                         totalArticlesHT += totalLigne;
 
-                        // CORRECTION : Utilisation de description à la place du nom d'article manquant
-                        string descriptionArticle = detail["description"]?.ToString() ?? "Article";
-                        string designationComplete = $"{descriptionArticle} ({detail["nom_service"]})";
+                        // 3. INTEGRATION COMPLETE : Extraction conjointe du nom de l'article et du type de service
+                        string nomArticle = detail["nom_article"] != DBNull.Value ? detail["nom_article"].ToString()! : "Article";
+                        string nomService = detail["nom_service"] != DBNull.Value ? detail["nom_service"].ToString()! : "Service";
+                        string designationComplete = $"{nomArticle} ({nomService})";
 
                         iTextCell cName = new iTextCell();
                         cName.Border = iTextCell.BOTTOM_BORDER;
                         cName.BorderColor = couleurBordureLight;
                         cName.Padding = 8;
 
-                        // Ajout du nom de l'article principal
                         cName.AddElement(new iTextParagraph(designationComplete, fontNormal));
 
-                        // INTÉGRATION DE L'INCIDENT : Si un incident est enregistré sur cette ligne, on l'affiche en dessous
                         if (detail.Table.Columns.Contains("description_incident") && detail["description_incident"] != DBNull.Value && !string.IsNullOrWhiteSpace(detail["description_incident"].ToString()))
                         {
                             string incidentTxt = $"⚠️ Anomalie : {detail["description_incident"]}";
@@ -321,11 +322,14 @@ namespace ElKharis.Services
                 {
                     conn.Open();
 
-                    // MISE À JOUR : On va chercher la description, le service et on fait un LEFT JOIN avec ta table d'incidents
-                    // (Remplace 'incidents' et 'commentaire' par tes vrais noms de table et colonne d'incidents si différents)
-                    string query = @"SELECT dc.id_detail, dc.description, dc.quantite, dc.prix_unitaire, s.nom_service, inc.description AS description
+                    // 4. MISE À JOUR CRUCIALE : Requête modifiée pour faire un INNER JOIN avec ta table des articles/vêtements (ex: 'articles') 
+                    // afin de récupérer son libellé (ici 'art.nom_article') en plus du service.
+                    string query = @"SELECT dc.id_detail, dc.quantite, dc.prix_unitaire, 
+                                            art.nom_article, s.nom_service, 
+                                            inc.description AS description_incident
                                      FROM detail_commandes dc
                                      INNER JOIN services s ON dc.id = s.id
+                                     INNER JOIN articles art ON dc.id_article = art.id_article
                                      LEFT JOIN incidents_articles inc ON dc.id_detail = inc.id_detail
                                      WHERE dc.id_commande = @id";
 

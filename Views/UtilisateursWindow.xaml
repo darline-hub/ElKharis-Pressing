@@ -86,9 +86,9 @@
                             </Style>
                         </Button.Resources>
                     </Button>
-                    <Border BorderThickness="1.5" BorderBrush="#CBD5E0" CornerRadius="8" Background="White" Padding="12,5" Width="450" Height="36">
+                    <Border BorderThickness="1.5" BorderBrush="#CBD5E0" CornerRadius="8" Background="White" Padding="12.5" Width="450" Height="36" RenderTransformOrigin="0.482,1.543">
                         <Grid>
-                            <TextBox x:Name="TxtRecherche" BorderThickness="0" Background="Transparent" FontSize="14" Foreground="#2D3748" VerticalContentAlignment="Center" TextChanged="TxtRecherche_TextChanged"/>
+                            <TextBox x:Name="TxtRecherche" BorderThickness="0" Background="Transparent" FontSize="12" Foreground="#2D3748" VerticalContentAlignment="Center" TextChanged="TxtRecherche_TextChanged"/>
                             <TextBlock Text="Rechercher par ID, nom d'utilisateur, email..." Foreground="#A0AEC0" IsHitTestVisible="False" VerticalAlignment="Center" Margin="5,0,0,0">
                                 <TextBlock.Style>
                                     <Style TargetType="{x:Type TextBlock}">
@@ -117,7 +117,7 @@
                     </Button>
 
                     <Button x:Name="BtnAjouter" Content="➕ Nouvel Utilisateur" 
-                            Width="160" Height="35" Background="#00A8CC" Foreground="White" 
+                            Width="155" Height="35" Background="#00A8CC" Foreground="White" 
                             FontWeight="Bold" BorderThickness="0" Click="BtnAjouter_Click">
                         <Button.Resources>
                             <Style TargetType="Border">
@@ -128,7 +128,7 @@
                 </StackPanel>
             </Grid>
 
-            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="10" Margin="-37,50,0,0" Grid.RowSpan="2">
+            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="10" Margin="-15,51,0,0" Grid.RowSpan="2">
                 <DataGrid x:Name="DgUtilisateurs" AutoGenerateColumns="False" IsReadOnly="True" 
                           SelectionMode="Single" Background="White" RowHeight="35"
                           BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E0E0E0">

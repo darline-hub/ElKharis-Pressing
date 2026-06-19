@@ -15,7 +15,7 @@ namespace ElKharis.Views
         {
             InitializeComponent();
             estModification = false;
-            TxtTitreFormulaire.Text = "Nouvel Utilisateur";
+            TxtTitreFormulaire.Text = "Fiche Utilisateur";
         }
 
         // Constructeur pour la MODIFICATION (on reçoit les données existantes)
@@ -67,12 +67,13 @@ namespace ElKharis.Views
 
                     if (estModification)
                     {
+                        // En modification, on ne touche pas au mot de passe existant
                         query = "UPDATE Utilisateurs SET nom_utilisateur = @nom, email = @email, role = @role WHERE id = @id";
                     }
                     else
                     {
-                        // Note : Ajoute un champ mot_de_passe par défaut si ta table l'exige
-                        query = "INSERT INTO Utilisateurs (nom_utilisateur, email, role) VALUES (@nom, @email, @role)";
+                        // En ajout : on inclut le champ mot_de_passe (adapte le nom de la colonne si nécessaire, ex: password ou mot_de_passe)
+                        query = "INSERT INTO Utilisateurs (nom_utilisateur, email, role, mot_de_passe) VALUES (@nom, @email, @role, @mdp)";
                     }
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
@@ -85,12 +86,35 @@ namespace ElKharis.Views
                         {
                             cmd.Parameters.AddWithValue("@id", TxtId.Text);
                         }
+                        else
+                        {
+                            // Définition du mot de passe par défaut
+                            string mdpParDefaut = "Pass1234";
+
+                            // OPTION A : Si tu as installé BCrypt via NuGet (Recommandé pour la sécurité)
+                            string mdpHache = BCrypt.Net.BCrypt.HashPassword(mdpParDefaut);
+                            cmd.Parameters.AddWithValue("@mdp", mdpHache);
+
+                            // OPTION B : Si tu es encore en texte brut pour tes tests (Décommente la ligne ci-dessous et commente l'option A)
+                            // cmd.Parameters.AddWithValue("@mdp", mdpParDefaut);
+                        }
 
                         cmd.ExecuteNonQuery();
                     }
                 }
 
-                MessageBox.Show("Opération enregistrée avec succès !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Message personnalisé pour informer l'admin du mot de passe généré en cas d'ajout
+                if (!estModification)
+                {
+                    MessageBox.Show("Utilisateur créé avec succès !\n\nSon mot de passe temporaire est : Pass1234",
+                                    "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Profil utilisateur mis à jour avec succès !",
+                                    "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+
                 this.DialogResult = true; // Indique à la fenêtre parente que tout s'est bien passé
                 this.Close();
             }

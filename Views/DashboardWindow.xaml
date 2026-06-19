@@ -80,7 +80,7 @@
             <!-- Entête du contenu -->
             <Grid Grid.Row="0" Margin="0">
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Tableau de bord" FontSize="24" FontWeight="Bold" Foreground="#2D3748"/>
+                    <TextBlock Text="Tableau de bord" FontSize="24" FontWeight="Bold" Foreground="#0A2540"/>
                     <TextBlock Text="Vue d'ensemble de l'activité du pressing" FontSize="13" Foreground="#718096"/>
                 </StackPanel>
                 <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#A0AEC0" FontWeight="Bold" FontSize="18" Cursor="Hand" Click="BtnQuitter_Click"/>
