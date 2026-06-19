@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj": {}
+    "C:\\Users\\NB-computer\\Desktop\\jeanne\\ElKharis-Pressing\\ElKharis.csproj": {}
   },
   "projects": {
-    "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj": {
+    "C:\\Users\\NB-computer\\Desktop\\jeanne\\ElKharis-Pressing\\ElKharis.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj",
+        "projectUniqueName": "C:\\Users\\NB-computer\\Desktop\\jeanne\\ElKharis-Pressing\\ElKharis.csproj",
         "projectName": "ElKharis",
-        "projectPath": "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\ElKharis.csproj",
-        "packagesPath": "C:\\Users\\NT Store\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\NT Store\\Source\\Repos\\ElKharis-Pressing\\obj\\",
+        "projectPath": "C:\\Users\\NB-computer\\Desktop\\jeanne\\ElKharis-Pressing\\ElKharis.csproj",
+        "packagesPath": "C:\\Users\\NB-computer\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\NB-computer\\Desktop\\jeanne\\ElKharis-Pressing\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\NT Store\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\NB-computer\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -57,6 +53,10 @@
               "target": "Package",
               "version": "[4.2.0, )"
             },
+            "LiveCharts.Wpf": {
+              "target": "Package",
+              "version": "[0.9.7, )"
+            },
             "MySql.Data": {
               "target": "Package",
               "version": "[9.7.0, )"
@@ -85,7 +85,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.315/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
