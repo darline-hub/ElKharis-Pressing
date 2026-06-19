@@ -59,3 +59,11 @@ C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\ElKhar
 C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\ref\ElKharis.dll
 C:\Users\NT Store\Source\Repos\ElKharis-Pressing\bin\Debug\net8.0-windows\LiveCharts.dll
 C:\Users\NT Store\Source\Repos\ElKharis-Pressing\bin\Debug\net8.0-windows\LiveCharts.Wpf.dll
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\Views\DeclarerIncidentWindow.baml
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\Views\DeclarerIncidentWindow.g.cs
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\bin\Debug\net8.0-windows\Resources\logo.jpeg
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\ElKharis_Content.g.cs
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\Views\UtilisateursWindow.g.cs
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\Views\UtilisateursWindow.baml
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\Views\FormUtilisateurWindow.g.cs
+C:\Users\NT Store\Source\Repos\ElKharis-Pressing\obj\Debug\net8.0-windows\Views\FormUtilisateurWindow.baml

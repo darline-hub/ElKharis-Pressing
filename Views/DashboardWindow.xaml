@@ -53,6 +53,7 @@
                     <Button Content="💳 Factures &amp; Reçus" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,2,0,2" Click="BtnFactures_Click"/>
                     <Button x:Name="BtnArticles" Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,2,0,2" Click="BtnArticles_Click"/>
                     <Button x:Name="BtnServices" Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" FontSize="13" Height="42" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,2,0,2" Click="BtnServices_Click"/>
+                    <Button x:Name="BtnUtilisateurs" Content="👥 Utilisateurs" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnUtilisateurs_Click"/>
                 </StackPanel>
 
                 <!-- Bouton Déconnexion -->
@@ -77,7 +78,7 @@
             </Grid.RowDefinitions>
 
             <!-- Entête du contenu -->
-            <Grid Grid.Row="0" Margin="0,5,0,15">
+            <Grid Grid.Row="0" Margin="0">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Tableau de bord" FontSize="24" FontWeight="Bold" Foreground="#2D3748"/>
                     <TextBlock Text="Vue d'ensemble de l'activité du pressing" FontSize="13" Foreground="#718096"/>

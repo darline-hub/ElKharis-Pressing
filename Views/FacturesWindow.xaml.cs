@@ -42,7 +42,7 @@ namespace ElKharis.Views
             {
                 BtnServices.Visibility = Visibility.Collapsed;
                 BtnArticles.Visibility = Visibility.Collapsed;
-                // BtnUtilisateurs.Visibility = Visibility.Collapsed;
+                BtnUtilisateurs.Visibility = Visibility.Collapsed;
             }
             // Si c'est l'Administrateur, ils restent visibles par défaut (Visibility.Visible)
         }
@@ -394,6 +394,23 @@ namespace ElKharis.Views
         private void BtnQuitter_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        private void BtnUtilisateurs_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                UtilisateursWindow utilisateur = new UtilisateursWindow();
+                utilisateur.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture des utilisateurs : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
     }
 }

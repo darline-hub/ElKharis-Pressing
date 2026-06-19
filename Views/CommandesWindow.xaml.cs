@@ -3,9 +3,10 @@ using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using MySql.Data.MySqlClient;
+using System.Windows.Media;
 using ElKharis.Models;
 using ElKharis.Services;
+using MySql.Data.MySqlClient;
 
 namespace ElKharis.Views
 {
@@ -29,7 +30,7 @@ namespace ElKharis.Views
             {
                 BtnServices.Visibility = Visibility.Collapsed;
                 BtnArticles.Visibility = Visibility.Collapsed;
-                // BtnUtilisateurs.Visibility = Visibility.Collapsed;
+                BtnUtilisateurs.Visibility = Visibility.Collapsed;
             }
             // Si c'est l'Administrateur, ils restent visibles par défaut (Visibility.Visible)
         }
@@ -133,7 +134,119 @@ namespace ElKharis.Views
                 }
             }
         }
+        private void BtnSignalerIncidentGlobal_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag != null)
+            {
+                int idCommande = Convert.ToInt32(btn.Tag);
 
+                // On stocke l'id_detail et le nom de l'article associé
+                Dictionary<int, string> articlesDeLaCommande = new Dictionary<int, string>();
+
+                try
+                {
+                    using (MySqlConnection conn = new MySqlConnection("Server=localhost;Database=pressing_elkharis;Uid=root;Pwd=;"))
+                    {
+                        conn.Open();
+
+                        // CORRECTION : Jointure SQL pour récupérer le nom de l'article depuis la bonne table
+                        // (Ajuste 'articles' et 'nom_article' si ta table s'appelle différemment, par exemple 'nom')
+                        string query = @"
+                    SELECT dc.id_detail, a.nom_article AS nom_article 
+                    FROM detail_commandes dc
+                    INNER JOIN articles a ON dc.id_article = a.id_article
+                    WHERE dc.id_commande = @idCmd";
+
+                        using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@idCmd", idCommande);
+                            using (MySqlDataReader reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    int idDetail = Convert.ToInt32(reader["id_detail"]);
+                                    // Sécurité anti-null que nous avons configurée ensemble
+                                    string nomArticle = reader["nom_article"]?.ToString() ?? "Article inconnu";
+
+                                    articlesDeLaCommande.Add(idDetail, nomArticle);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de la récupération des articles : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Sécurité : Si la commande n'a aucun article
+                if (articlesDeLaCommande.Count == 0)
+                {
+                    MessageBox.Show("Cette commande ne contient aucun article enregistré.", "Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int idDetailSelectionne = -1;
+                string nomArticleSelectionne = "";
+
+                if (articlesDeLaCommande.Count == 1)
+                {
+                    var uniqueArticle = articlesDeLaCommande.First();
+                    idDetailSelectionne = uniqueArticle.Key;
+                    nomArticleSelectionne = uniqueArticle.Value;
+                }
+                else
+                {
+                    // Plusieurs articles : On affiche la boîte de choix
+                    Window choixWindow = new Window
+                    {
+                        Title = "Sélectionner l'article concerné",
+                        Width = 350,
+                        Height = 250,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Owner = this,
+                        ResizeMode = ResizeMode.NoResize
+                    };
+
+                    StackPanel sp = new StackPanel { Margin = new Thickness(15) };
+                    TextBlock lbl = new TextBlock { Text = "Quel article a subi l'incident ?", FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 10) };
+                    ListBox lb = new ListBox { DisplayMemberPath = "Value", SelectedValuePath = "Key", Height = 100, ItemsSource = articlesDeLaCommande };
+                    Button btnValider = new Button { Content = "Confirmer", Height = 30, Margin = new Thickness(0, 15, 0, 0), Background = new SolidColorBrush(Color.FromRgb(43, 108, 176)), Foreground = Brushes.White, FontWeight = FontWeights.Bold };
+
+                    btnValider.Click += (s, args) => {
+                        if (lb.SelectedItem != null)
+                        {
+                            choixWindow.DialogResult = true;
+                            choixWindow.Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Veuillez sélectionner un vêtement.");
+                        }
+                    };
+
+                    sp.Children.Add(lbl);
+                    sp.Children.Add(lb);
+                    sp.Children.Add(btnValider);
+                    choixWindow.Content = sp;
+
+                    if (choixWindow.ShowDialog() == true)
+                    {
+                        idDetailSelectionne = (int)lb.SelectedValue;
+                        nomArticleSelectionne = ((KeyValuePair<int, string>)lb.SelectedItem).Value;
+                    }
+                }
+
+                // Ouverture de la fenêtre finale de déclaration
+                if (idDetailSelectionne != -1)
+                {
+                    DeclarerIncidentWindow incidentWin = new DeclarerIncidentWindow(idDetailSelectionne, nomArticleSelectionne);
+                    incidentWin.Owner = this;
+                    incidentWin.ShowDialog();
+                }
+            }
+        }
 
 
         private void ChargerCommandes()
@@ -375,6 +488,22 @@ namespace ElKharis.Views
             }
         }
 
+        private void BtnUtilisateurs_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                UtilisateursWindow utilisateur = new UtilisateursWindow();
+                utilisateur.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture des utilisateurs : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+        }
         private void BtnNouvelleCommande_Click(object sender, RoutedEventArgs e)
         {
             NouvelleCommandeWindow saisieWindow = new NouvelleCommandeWindow();

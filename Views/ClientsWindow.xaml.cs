@@ -41,7 +41,7 @@ namespace ElKharis.Views
             {
                 BtnServices.Visibility = Visibility.Collapsed;
                 BtnArticles.Visibility = Visibility.Collapsed;
-                // BtnUtilisateurs.Visibility = Visibility.Collapsed;
+                BtnUtilisateurs.Visibility = Visibility.Collapsed;
             }
             // Si c'est l'Administrateur, ils restent visibles par défaut (Visibility.Visible)
         }
@@ -54,25 +54,26 @@ namespace ElKharis.Views
                 {
                     conn.Open();
 
-                    // Requête optimisée avec IFNULL et les nouveaux paliers de fidélité
+                    // AJOUT DE c.sexe DANS LE SELECT ET LE GROUP BY
                     string query = @"
-                SELECT 
-                    c.id_client, 
-                    c.nom, 
-                    c.prenom, 
-                    c.telephone, 
-                    c.email, 
-                    c.ville,
-                    c.quartier,
-                    IFNULL(SUM(co.montant_total), 0) AS chiffre_affaire,
-                    CASE 
-                        WHEN IFNULL(SUM(co.montant_total), 0) >= 100000 THEN 'Fidèle'
-                        ELSE 'Nouveau'
-                    END AS fidelite
-                FROM clients c
-                LEFT JOIN commandes co ON c.id_client = co.id_client
-                GROUP BY c.id_client, c.nom, c.prenom, c.telephone, c.email, c.ville, c.quartier
-                ORDER BY chiffre_affaire DESC";
+                    SELECT 
+                        c.id_client, 
+                        c.nom, 
+                        c.prenom, 
+                        c.sexe, -- <--- RAJOUTÉ ICI
+                        c.telephone, 
+                        c.email, 
+                        c.ville,
+                        c.quartier,
+                        IFNULL(SUM(co.montant_total), 0) AS chiffre_affaire,
+                        CASE 
+                            WHEN IFNULL(SUM(co.montant_total), 0) >= 100000 THEN 'Fidèle'
+                            ELSE 'Nouveau'
+                        END AS fidelite
+                    FROM clients c
+                    LEFT JOIN commandes co ON c.id_client = co.id_client
+                    GROUP BY c.id_client, c.nom, c.prenom, c.sexe, c.telephone, c.email, c.ville, c.quartier -- <--- AJOUTÉ ICI AUSSI
+                    ORDER BY chiffre_affaire DESC";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
@@ -195,6 +196,18 @@ namespace ElKharis.Views
             }
         }
 
+        private void DgClients_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DgClients.SelectedItem is System.Data.DataRowView ligneSelectionnee)
+            {
+                string nomClient = ligneSelectionnee["nom"].ToString() ?? "";
+                string prenomClient = ligneSelectionnee["prenom"].ToString() ?? "";
+
+                // Exemple : Afficher temporairement dans la console pour tester
+                System.Diagnostics.Debug.WriteLine($"Client sélectionné : {nomClient} {prenomClient}");
+            }
+        }
+
         private void BtnFactures_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -273,6 +286,22 @@ namespace ElKharis.Views
                                 "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void BtnUtilisateurs_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                UtilisateursWindow utilisateur = new UtilisateursWindow();
+                utilisateur.Show();
+                this.Close();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture des utilisateurs : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+        }
 
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
@@ -285,6 +314,8 @@ namespace ElKharis.Views
         {
             Application.Current.Shutdown();
         }
+
+       
     }
 
 }

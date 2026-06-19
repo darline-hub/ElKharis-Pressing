@@ -37,8 +37,9 @@
                     <Button Content="🧺 Commandes" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnCommandes_Click"/>
                     <Button Content="👥 Clients" Background="Transparent" Foreground="#E2E8F0" FontSize="14" Height="45" HorizontalContentAlignment="Left" Padding="15,0,0,0" BorderThickness="0" Cursor="Hand" Click="BtnClients_Click"/>
                     <Button Style="{StaticResource ActiveMenuButtonStyle}" Content="💳 Factures &amp; Reçus"/>
-                    <Button x:Name="BtnArticles" Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
-                    <Button x:Name="BtnServices" Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0"/>
+                    <Button x:Name="BtnArticles" Content="👕 Articles" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnArticles_Click"/>
+                    <Button x:Name="BtnServices" Content="🕒 Services" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnServices_Click"/>
+                    <Button x:Name="BtnUtilisateurs" Content="👥 Utilisateurs" Background="Transparent" Foreground="#E2E8F0" Height="40" BorderThickness="0" HorizontalContentAlignment="Left" Padding="15,0,0,0" Cursor="Hand" Margin="0,5,0,0" Click="BtnUtilisateurs_Click"/>
                 </StackPanel>
 
                 <Button Grid.Row="2" Content="Déconnexion" Background="#E53E3E" Foreground="White" FontWeight="Bold" FontSize="14" Height="40" Margin="15,0,15,0" Cursor="Hand" BorderThickness="0" Click="BtnLogout_Click">

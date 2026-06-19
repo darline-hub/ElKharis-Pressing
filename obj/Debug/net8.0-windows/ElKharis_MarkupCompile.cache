@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\NT Store\Source\Repos\ElKharis-Pressing\App.xaml
-111537480291
-
-171975085422
+1489998512
+1-1343883990
+20-550382507
 210-1659241013
-MainWindow.xaml;Views\ArticlesWindow.xaml;Views\ClientsWindow.xaml;Views\CommandesWindow.xaml;Views\DashboardWindow.xaml;Views\FacturesWindow.xaml;Views\LoginWindow.xaml;Views\NouveauClientWindow.xaml;Views\NouvelleCommandeWindow.xaml;Views\ServicesWindow.xaml;Views\SigninWindow.xaml;
+MainWindow.xaml;Views\ArticlesWindow.xaml;Views\ClientsWindow.xaml;Views\CommandesWindow.xaml;Views\DashboardWindow.xaml;Views\DeclarerIncidentWindow.xaml;Views\FacturesWindow.xaml;Views\FormUtilisateurWindow.xaml;Views\LoginWindow.xaml;Views\NouveauClientWindow.xaml;Views\NouvelleCommandeWindow.xaml;Views\ServicesWindow.xaml;Views\SigninWindow.xaml;Views\UtilisateursWindow.xaml;
 
 False
 

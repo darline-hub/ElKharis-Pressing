@@ -22,7 +22,6 @@ namespace ElKharis.Services
 
         public static void GenererDocumentPDF(int idCommande, string typeDocument, string cheminFichier)
         {
-            // Initialisation du document A4 avec des marges de 36pt
             iTextDocument doc = new iTextDocument(iTextPageSize.A4, 36, 36, 36, 36);
 
             try
@@ -30,13 +29,13 @@ namespace ElKharis.Services
                 iTextSharp.text.pdf.PdfWriter.GetInstance(doc, new FileStream(cheminFichier, FileMode.Create));
                 doc.Open();
 
-                //CHARTE GRAPHIQUE & POLICES
                 iTextSharp.text.pdf.BaseFont bf = iTextSharp.text.pdf.BaseFont.CreateFont(iTextSharp.text.pdf.BaseFont.HELVETICA, iTextSharp.text.pdf.BaseFont.CP1252, iTextSharp.text.pdf.BaseFont.NOT_EMBEDDED);
 
                 iTextBaseColor bleuNuit = new iTextBaseColor(26, 54, 93);     // #1A365D
                 iTextBaseColor vertSlogan = new iTextBaseColor(40, 167, 69);  // #28A745
                 iTextBaseColor grisTexte = new iTextBaseColor(113, 128, 150); // #718096
                 iTextBaseColor grisSombre = new iTextBaseColor(31, 41, 55);    // #1F2937
+                iTextBaseColor rougeIncident = new iTextBaseColor(229, 62, 62); // #E53E3E (Pour l'affichage de l'anomalie)
 
                 iTextFont fontEntreprise = new iTextFont(bf, 18, iTextFont.BOLD, bleuNuit);
                 iTextFont fontSlogan = new iTextFont(bf, 9.5f, iTextFont.ITALIC, vertSlogan);
@@ -45,50 +44,47 @@ namespace ElKharis.Services
                 iTextFont fontTitreDoc = new iTextFont(bf, 12, iTextFont.BOLD, bleuNuit);
                 iTextFont fontNormal = new iTextFont(bf, 10, iTextFont.NORMAL, grisSombre);
                 iTextFont fontBold = new iTextFont(bf, 10, iTextFont.BOLD, bleuNuit);
+                iTextFont fontIncident = new iTextFont(bf, 9, iTextFont.ITALIC, rougeIncident); // Police d'incident
                 iTextFont fontClientNom = new iTextFont(bf, 11, iTextFont.BOLD, grisSombre);
                 iTextFont fontSectionTitre = new iTextFont(bf, 10, iTextFont.BOLD, grisTexte);
 
                 iTextBaseColor couleurBordureLight = new iTextBaseColor(229, 231, 235); // #E5E7EB
                 iTextBaseColor couleurFondGris = new iTextBaseColor(245, 245, 245);    // #F5F5F5
 
-                // Récupération des données
                 DataRow? commandeRow = RecupererInfosCommande(idCommande);
 
-                
-                //EN-TÊTE PRINCIPALE
+                // EN-TÊTE PRINCIPALE
                 iTextTable tableHeader = new iTextTable(2);
                 tableHeader.WidthPercentage = 100;
-                tableHeader.SetWidths(new float[] { 1.3f, 1f }); // Équilibre gauche/droite
+                tableHeader.SetWidths(new float[] { 1.3f, 1f });
 
-                //PARTIE GAUCHE : LOGO + INFOS ENTREPRISE
-                iTextCell cellGauche = new iTextCell();
-                cellGauche.Border = iTextCell.NO_BORDER;
-                cellGauche.VerticalAlignment = iTextElement.ALIGN_TOP;
+                iTextCell cellGauche = new iTextCell { Border = iTextCell.NO_BORDER, VerticalAlignment = iTextElement.ALIGN_TOP };
 
-                // Gestion et intégration propre du Logo
                 try
                 {
                     string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                    // On cherche d'abord dans le dossier d'exécution direct (grâce à "Copier si plus récent")
                     string cheminLogo = Path.Combine(baseDir, "Resources", "logo.jpeg");
-                    if (!File.Exists(cheminLogo)) cheminLogo = Path.Combine(baseDir, "Resources", "logo.png");
 
-                    // Sécurité de secours si exécuté depuis l'environnement de dev sans copie
-                    if (!File.Exists(cheminLogo)) cheminLogo = Path.Combine(baseDir, "..", "..", "Resources", "logo.jpeg");
-                    if (!File.Exists(cheminLogo)) cheminLogo = Path.Combine(baseDir, "..", "..", "Resources", "logo.png");
-
-                    if (File.Exists(cheminLogo))
+                    // Ce message te dira exactement où ton application cherche le logo
+                    if (!File.Exists(cheminLogo))
+                    {
+                        MessageBox.Show($"Le logo est introuvable à cet endroit :\n{cheminLogo}",
+                                        "Diagnostic Logo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
                     {
                         iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance(cheminLogo);
-                        logo.ScaleToFit(60f, 60f); 
+                        logo.ScaleToFit(60f, 60f);
                         logo.Alignment = iTextElement.ALIGN_LEFT;
                         cellGauche.AddElement(logo);
                     }
                 }
-                catch (Exception) { /* Évite de faire planter l'application */ }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors du chargement du logo : {ex.Message}", "Erreur Logo");
+                }
 
                 cellGauche.AddElement(new iTextParagraph("El-Kharis Pressing", fontEntreprise));
-
                 iTextParagraph pSlog = new iTextParagraph("\"L'excellence au service de votre éclat\"", fontSlogan);
                 pSlog.SpacingAfter = 3f;
                 cellGauche.AddElement(pSlog);
@@ -98,13 +94,8 @@ namespace ElKharis.Services
                 cellGauche.AddElement(new iTextParagraph("Contact : +237 677 28 67 12 / +237 656 53 04 84", fontInfosEntreprise));
                 tableHeader.AddCell(cellGauche);
 
-                // --- PARTIE DROITE : NUMÉRO, DATE, ÉMIS PAR ---
-                iTextCell cellDroite = new iTextCell();
-                cellDroite.Border = iTextCell.NO_BORDER;
-                cellDroite.VerticalAlignment = iTextElement.ALIGN_TOP;
-                cellDroite.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
+                iTextCell cellDroite = new iTextCell { Border = iTextCell.NO_BORDER, VerticalAlignment = iTextElement.ALIGN_TOP, HorizontalAlignment = iTextElement.ALIGN_RIGHT };
 
-                // Facture N° / Reçu N°
                 string libelleDoc = typeDocument.ToUpper() == "FACTURE" ? "Facture N°" : "Reçu N°";
                 string numeroDoc = commandeRow != null ? commandeRow["numero_commande"]?.ToString() ?? idCommande.ToString() : idCommande.ToString();
                 iTextParagraph pTitre = new iTextParagraph($"{libelleDoc} : {numeroDoc}", fontTitreDoc);
@@ -112,7 +103,6 @@ namespace ElKharis.Services
                 pTitre.SpacingAfter = 4f;
                 cellDroite.AddElement(pTitre);
 
-                // Date de dépôt
                 string dateAffichage = commandeRow != null && commandeRow["date_commande"] != DBNull.Value
                     ? Convert.ToDateTime(commandeRow["date_commande"]).ToString("dd/MM/yyyy à HH:mm")
                     : DateTime.Now.ToString("dd/MM/yyyy à HH:mm");
@@ -123,23 +113,16 @@ namespace ElKharis.Services
 
                 tableHeader.AddCell(cellDroite);
                 doc.Add(tableHeader);
-
-                // Ligne de séparation sous l'en-tête complet
                 doc.Add(new iTextParagraph("\n"));
 
-                
-                //BLOC CLIENT (Juste en dessous : Gauche = Infos Client / Droite = ID & Tél)
+                // BLOC CLIENT
                 if (commandeRow != null)
                 {
                     iTextTable tableClientBloc = new iTextTable(2);
                     tableClientBloc.WidthPercentage = 100;
                     tableClientBloc.SetWidths(new float[] { 1.2f, 1.2f });
 
-                    //CLIENT GAUCHE
-                    iTextCell cellClientG = new iTextCell();
-                    cellClientG.Border = iTextCell.NO_BORDER;
-                    cellClientG.VerticalAlignment = iTextElement.ALIGN_TOP;
-
+                    iTextCell cellClientG = new iTextCell { Border = iTextCell.NO_BORDER, VerticalAlignment = iTextElement.ALIGN_TOP };
                     cellClientG.AddElement(new iTextParagraph("FACTURE POUR :", fontSectionTitre));
                     cellClientG.AddElement(new iTextParagraph($"{commandeRow["nom"]}", fontClientNom));
 
@@ -148,12 +131,7 @@ namespace ElKharis.Services
                     cellClientG.AddElement(new iTextParagraph($"Email : {emailClient}", fontNormal));
                     tableClientBloc.AddCell(cellClientG);
 
-                    //CLIENT DROITE (Coordonnées Téléphone & ID) 
-                    iTextCell cellClientD = new iTextCell();
-                    cellClientD.Border = iTextCell.NO_BORDER;
-                    cellClientD.VerticalAlignment = iTextElement.ALIGN_TOP;
-                    cellClientD.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
-
+                    iTextCell cellClientD = new iTextCell { Border = iTextCell.NO_BORDER, VerticalAlignment = iTextElement.ALIGN_TOP, HorizontalAlignment = iTextElement.ALIGN_RIGHT };
                     iTextParagraph pIdClient = new iTextParagraph($"ID Client : #{commandeRow["id_client"]}", fontBold);
                     pIdClient.Alignment = iTextElement.ALIGN_RIGHT;
                     pIdClient.SpacingAfter = 2f;
@@ -167,7 +145,6 @@ namespace ElKharis.Services
                     doc.Add(tableClientBloc);
                     doc.Add(new iTextParagraph("\n"));
 
-                   
                     // TABLEAU DES ARTICLES
                     iTextTable tableArticles = new iTextTable(4);
                     tableArticles.WidthPercentage = 100;
@@ -196,37 +173,38 @@ namespace ElKharis.Services
                         decimal totalLigne = pu * qte;
                         totalArticlesHT += totalLigne;
 
-                        string designationComplete = $"{detail["nom_article"]} ({detail["nom_service"]})";
-                        iTextCell cName = new iTextCell(new iTextPhrase(designationComplete, fontNormal));
+                        // CORRECTION : Utilisation de description à la place du nom d'article manquant
+                        string descriptionArticle = detail["description"]?.ToString() ?? "Article";
+                        string designationComplete = $"{descriptionArticle} ({detail["nom_service"]})";
+
+                        iTextCell cName = new iTextCell();
                         cName.Border = iTextCell.BOTTOM_BORDER;
                         cName.BorderColor = couleurBordureLight;
                         cName.Padding = 8;
+
+                        // Ajout du nom de l'article principal
+                        cName.AddElement(new iTextParagraph(designationComplete, fontNormal));
+
+                        // INTÉGRATION DE L'INCIDENT : Si un incident est enregistré sur cette ligne, on l'affiche en dessous
+                        if (detail.Table.Columns.Contains("description_incident") && detail["description_incident"] != DBNull.Value && !string.IsNullOrWhiteSpace(detail["description_incident"].ToString()))
+                        {
+                            string incidentTxt = $"⚠️ Anomalie : {detail["description_incident"]}";
+                            cName.AddElement(new iTextParagraph(incidentTxt, fontIncident));
+                        }
+
                         tableArticles.AddCell(cName);
 
-                        iTextCell cPrice = new iTextCell(new iTextPhrase($"{pu.ToString("N0")} F", fontNormal));
-                        cPrice.Border = iTextCell.BOTTOM_BORDER;
-                        cPrice.BorderColor = couleurBordureLight;
-                        cPrice.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
-                        cPrice.Padding = 8;
+                        iTextCell cPrice = new iTextCell(new iTextPhrase($"{pu.ToString("N0")} F", fontNormal)) { Border = iTextCell.BOTTOM_BORDER, BorderColor = couleurBordureLight, HorizontalAlignment = iTextElement.ALIGN_RIGHT, Padding = 8 };
                         tableArticles.AddCell(cPrice);
 
-                        iTextCell cQty = new iTextCell(new iTextPhrase(qte.ToString(), fontNormal));
-                        cQty.Border = iTextCell.BOTTOM_BORDER;
-                        cQty.BorderColor = couleurBordureLight;
-                        cQty.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
-                        cQty.Padding = 8;
+                        iTextCell cQty = new iTextCell(new iTextPhrase(qte.ToString(), fontNormal)) { Border = iTextCell.BOTTOM_BORDER, BorderColor = couleurBordureLight, HorizontalAlignment = iTextElement.ALIGN_RIGHT, Padding = 8 };
                         tableArticles.AddCell(cQty);
 
-                        iTextCell cAmount = new iTextCell(new iTextPhrase($"{totalLigne.ToString("N0")} F", fontNormal));
-                        cAmount.Border = iTextCell.BOTTOM_BORDER;
-                        cAmount.BorderColor = couleurBordureLight;
-                        cAmount.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
-                        cAmount.Padding = 8;
+                        iTextCell cAmount = new iTextCell(new iTextPhrase($"{totalLigne.ToString("N0")} F", fontNormal)) { Border = iTextCell.BOTTOM_BORDER, BorderColor = couleurBordureLight, HorizontalAlignment = iTextElement.ALIGN_RIGHT, Padding = 8 };
                         tableArticles.AddCell(cAmount);
                     }
                     doc.Add(tableArticles);
 
-                    
                     // SYNTHÈSE FINANCIÈRE
                     iTextTable tableSummary = new iTextTable(2);
                     tableSummary.WidthPercentage = 100;
@@ -250,31 +228,21 @@ namespace ElKharis.Services
                     decimal reste = totalTTC - reduction - avance;
                     if (reste < 0) reste = 0;
 
-                    iTextCell cellTotalLbl = new iTextCell(new iTextPhrase("RESTE À PAYER :", fontBold));
-                    cellTotalLbl.BackgroundColor = couleurFondGris;
-                    cellTotalLbl.Border = iTextCell.NO_BORDER;
-                    cellTotalLbl.Padding = 10;
-                    cellTotalLbl.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
+                    iTextCell cellTotalLbl = new iTextCell(new iTextPhrase("RESTE À PAYER :", fontBold)) { BackgroundColor = couleurFondGris, Border = iTextCell.NO_BORDER, Padding = 10, HorizontalAlignment = iTextElement.ALIGN_RIGHT };
                     tableSummary.AddCell(cellTotalLbl);
 
-                    iTextCell cellTotalVal = new iTextCell(new iTextPhrase($"{reste.ToString("N0")} F", fontBold));
-                    cellTotalVal.BackgroundColor = couleurFondGris;
-                    cellTotalVal.Border = iTextCell.NO_BORDER;
-                    cellTotalVal.Padding = 10;
-                    cellTotalVal.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
+                    iTextCell cellTotalVal = new iTextCell(new iTextPhrase($"{reste.ToString("N0")} F", fontBold)) { BackgroundColor = couleurFondGris, Border = iTextCell.NO_BORDER, Padding = 10, HorizontalAlignment = iTextElement.ALIGN_RIGHT };
                     tableSummary.AddCell(cellTotalVal);
 
                     doc.Add(tableSummary);
                     doc.Add(new iTextParagraph("\n"));
 
-                    
-                    //ZONE BAS DE PAGE & CONDITIONS
+                    // ZONE BAS DE PAGE & CONDITIONS
                     iTextTable tableFooterBlock = new iTextTable(2);
                     tableFooterBlock.WidthPercentage = 100;
                     tableFooterBlock.SetWidths(new float[] { 1.5f, 1f });
 
-                    iTextCell cellConditions = new iTextCell();
-                    cellConditions.Border = iTextCell.NO_BORDER;
+                    iTextCell cellConditions = new iTextCell { Border = iTextCell.NO_BORDER };
                     iTextFont fontBordureGris = new iTextFont(bf, 10f, iTextFont.NORMAL, grisTexte);
 
                     string dateRetraitPrevue = commandeRow["date_livraison_prevue"] != DBNull.Value
@@ -287,10 +255,7 @@ namespace ElKharis.Services
                     cellConditions.AddElement(new iTextParagraph("Merci pour votre confiance !", fontBold));
                     tableFooterBlock.AddCell(cellConditions);
 
-                    iTextCell cellCachet = new iTextCell();
-                    cellCachet.Border = iTextCell.NO_BORDER;
-                    cellCachet.HorizontalAlignment = iTextElement.ALIGN_RIGHT;
-
+                    iTextCell cellCachet = new iTextCell { Border = iTextCell.NO_BORDER, HorizontalAlignment = iTextElement.ALIGN_RIGHT };
                     iTextParagraph pDir = new iTextParagraph("LE RÉCEPTIONNISTE", fontBold);
                     pDir.Alignment = iTextElement.ALIGN_RIGHT;
                     cellCachet.AddElement(pDir);
@@ -311,11 +276,7 @@ namespace ElKharis.Services
 
         private static void AjouterCelluleSynthese(iTextTable table, string texte, iTextFont font, int alignement, iTextBaseColor couleurBordure)
         {
-            iTextCell cell = new iTextCell(new iTextPhrase(texte, font));
-            cell.Border = iTextCell.BOTTOM_BORDER;
-            cell.BorderColor = couleurBordure;
-            cell.Padding = 8;
-            cell.HorizontalAlignment = alignement;
+            iTextCell cell = new iTextCell(new iTextPhrase(texte, font)) { Border = iTextCell.BOTTOM_BORDER, BorderColor = couleurBordure, Padding = 8, HorizontalAlignment = alignement };
             table.AddCell(cell);
         }
 
@@ -359,11 +320,15 @@ namespace ElKharis.Services
                 try
                 {
                     conn.Open();
-                    string query = @"SELECT dc.*, a.nom_article, s.nom_service
+
+                    // MISE À JOUR : On va chercher la description, le service et on fait un LEFT JOIN avec ta table d'incidents
+                    // (Remplace 'incidents' et 'commentaire' par tes vrais noms de table et colonne d'incidents si différents)
+                    string query = @"SELECT dc.id_detail, dc.description, dc.quantite, dc.prix_unitaire, s.nom_service, inc.description AS description
                                      FROM detail_commandes dc
-                                     INNER JOIN articles a ON dc.id_article = a.id_article
                                      INNER JOIN services s ON dc.id = s.id
+                                     LEFT JOIN incidents_articles inc ON dc.id_detail = inc.id_detail
                                      WHERE dc.id_commande = @id";
+
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@id", idCommande);
